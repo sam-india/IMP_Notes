@@ -1,0 +1,62 @@
+Core Java, Spring, Spring-JPA, Spring-MVC, REST Web services, WAS MQ, ORM-JPA, Bitbucket, Angular-JS V1.0,MDBs
+
+The project specification involves developing various application modules to support transactions performed using Debit, Credit or Loyalty card and providing support for alerts like Auth, Auth Control, Cycle, Monetary, Non-Monetary etc to end user.
+
+I was Involved in Development, Deployment and enhancement of CP and CP-UI application and we worked on Agile Methodolgies and Worked with Product Owner to convert Product Backlog into Sprint Backlogs.
+
+I Worked on various High Level Design doc and Code Development for multiple user stories.
+ 
+There are three main products under this application that we are developing for credit/Debit and Loyalty card, We have around 100 plus banks and different institution like shoping outlets as client for loyalty card and multiple clients are getting onboarded for credit and debit cards as well now.
+I am currently involved in the development of the credit and debit card product module and in this product we are introducing around 6 types of alerts and these alerts supports around 200 kind of transaction 
+												like debit/credit amount transaction,
+												threshould limit crossing ,
+												email got changed and so on
+The credit and debit card application went live in production around 1 monts ago with 50 plus banks like scotia, huntington, wells fargo etc from a different system.
+
+we have around 50+ mainframe queues configured in our application and we are producing around 10 different REST webservice for Registration enrollment/unenrollment, Account transfers for fraud & Lost/Stolen situation and Transactions alerts for delivery, JWT aurthorization etc.
+
+I have Worked on the Development of Registration Module in CP and CPUI application which supports the cardholder registration process using multiple interfaces like Mainframe Queues, Rest API and CPUI based registration and also developed a sub module Account Transfer to change the Card Information in case of any fraud or lost & stolen situation.
+	
+The another in CP Application was Transaction Module which enabled credit and debit cards transaction like Auth, Auth Control, Cycle, Monetary and Non-Monetary etc and worked on CPUI transaction module to provide the Transaction information based on card number or registrations etc.
+
+I have Worked on Fortify vulnerability scan tool integration and Splunk integration for CP and CPUI application as well.
+
+
+
+
+Hi Kaveri / All,
+
+My name is Sajal Samaiya, I hope you are doing well, I am reaching out to you regarding our earlier conversation for the Job opening in Singapore for Java Developer profile, Please let me know if you still have any openings for Java Full Stack Developer.
+
+I am serving notice in my current organisation and my LWD is 9th Mar 2020.
+
+I am currently working as Technology Lead in Infosys Limited, Pune with 6.5 Years of industry experience. I have a Dependents Pass to work in Singapore and looking for opportunities in java Full Stack development.
+
+Please refer me in your Organisation for Java Developer profile. I have worked on multiple financial services products like Consumer Preference Alert Delivery for Banking System, Life Insurance Platform and BPM Workflow tool (Business Process Management System).
+
+I have experience in Java full stack development with core Java, Spring Boot & MVC, Soap / Rest Web-service, Angular-JS, Oracle,DB2 and MySql Database etc. 
+
+I am attaching my resume for your reference and my Dependant’s Pass detail is also enclosed in the same.
+
+You can also reach out to me@+91-9977817883 for further discussion.
+
+Regards,
+Sajal Samaiya
++91-9977817883
+
+==============================
+My name is Sajal Samaiya, I hope you are doing well,I am currently working as Technology Lead in Infosys Limited, Pune with 6.5 Years of industry experience. I have a Dependents Pass to work in Singapore and looking for opportunities in java Full Stack development in Singapore.
+
+I am serving notice in my current organisation and my LWD is 9th Mar 2020.
+
+Please refer me in your Organisation for Java Developer profile. I have worked on multiple financial services products like Consumer Preference Alert Delivery for Banking System, Life Insurance Platform and BPM Workflow tool (Business Process Management System).
+
+I have experience in Java full stack development with core Java, Spring Boot & MVC, Soap / Rest Web-service, Angular-JS, Oracle,DB2 and MySql Database etc. 
+
+I am attaching my resume for your reference and my Dependant’s Pass detail is also enclosed in the same.
+
+You can also reach out to me@+91-9977817883 for further discussion.
+
+Regards,
+Sajal Samaiya
++91-9977817883

@@ -1,0 +1,34 @@
+1 row in RDBMS is considered as one document in elastic search in json format
+
+table name in DB is Type in elastic search
+
+in db we have a db schema, in elastic search we have index
+
+in Elastic search, Cluster is the place where i am going to store my entire data.
+
+its a collection of one or more nodes that together holds your entire data and provide federated index and search capabilities accross all nodes.
+
+Node is a single server that stores data and participate in clustering, node is by default called as uuid - universaly unique identifier and each nodes can have n no of shards and replica 
+localhost:9200/_cat/indices?v&pretty
+health status index 		uuid
+green 	open 	employee	fdgffg5gf8g8df78f78gd8f7g It means taht the data from employee index is stored in this uuid.
+
+shards: suppose we have very large data of about 1 tb which we are storing in a single node, this can cause performancee issue
+to resolve this we can distribute this data in multiple shards and multiple nodes
+Shards help us to allow horizonatally split or scale our data volume and nodes also keeps replica of shards, so in case if any shards fails replica can be used 
+to access the data
+
+keeping multiple server/node help us to increase performanceeif we have a single node and 8 shards and replicas then we need to search data in all the shards
+but if we split this data in 2 nodes then the shards are also devided into 4 X 4 in each noded now searching will happen in first node first and it will much faster in this kind of distirbuted setup
+
+RDBMS				-> DB Schema		-> Table		-> column/row
+ELASTIC SEARCH		-> index			-> types		-> documenyt with property
+
+mapping is a process of defining that how a documnt and the field it contains are stored and indexed
+lik in a employee index what is a dATA TYPE Of employee id like integer , data type of employee name is text etc
+
+elatic search provide DSL domain specif language based on JSON
+
+leaf qry clause looks for a perticular value in a particular field   such as match term range
+
+compound qry clause wrap other leaf or compound qry and are used to combine multiple qry in logical fashion

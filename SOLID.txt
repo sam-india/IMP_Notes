@@ -1,0 +1,34 @@
+S O L I D Design Principle
+
+"S"
+Single Responsibility Principle
+	single class should have single responsibility
+	like Employee class will handle employee data
+		Address class will handle address data
+		
+instead of creating a booking class with player payment details, create each of them seperately, so if changes accur in one class doesnt 
+		impact others.
+
+"O"
+Open for Extension - Closed for Modification
+
+Instead of concrete implementation of classes provide interface with the given method and then use that interface to create implementation class.
+instead of creaating a single implementation of payment class, create a payment interface with makePayment method and give impl based on cash card prefrence.
+
+"L"
+Liskov's substitution Principle'
+Any child should be able to substitute to its parent place to provide the functionality of its parent
+player class type P have three child c1, c2 and c3, P have playfootball mathod, so all three should have a proper impl of playfootball method,
+if any child is not implementingh this method then its a violation of Liskov substitution principle
+
+"I"
+Interface Segregation Principle
+Do not force any client to implement any unnecessary methods which they will not use.
+ex. in case of cash payment the payment interface should't have the save card method bcoz its irrelevent for cash payments.
+
+"D"
+Dependency Inversion Principle
+The constuction of the dependent object of a class should be outsourced to the class consuming that classes object.
+In short it depends on abstraction insteead of concreation
+
+ex its not a responsibility of booking class to give impl of payment class. 

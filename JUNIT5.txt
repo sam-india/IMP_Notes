@@ -1,0 +1,227 @@
+JUnit Architecture 
+Platform -> the arch of junit starts with a platform which comprises the library of junit which involved in running the test providing a way for you to call the test run or it provides an execution context so all these things are part of the core of the platform.
+There are three modules this JUNIT 5 patform supports.
+	1. Jupiter -> we as a developer are not going to intract with this platform, but what we are going to interact with is JUNIT API which is called Jupiter like @Test or @Assert are part of junit api.
+	2. VINTAGE -> This particular module supports the older version JUNIT like JUNIT v 3 & 4.
+	3. EXT (3rd Party): we can create our own api or use some third party test vendor, we can still use the same platform but Test API can be different.
+	
+Note: JUPITER is a new programming model in JUNIT, it is a extension module meaning that we can write some additional functionality in JUPITER and use it for testing.
+
+Start a new maven project and add below dependencies.
+
+	<properties>
+		<maven.compiler.target>8</maven.compiler.target>
+		<maven.compiler.source>8</maven.compiler.source>
+		<junit.jupiter.version>5.4.0</junit.jupiter.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+Test Class:
+------------------------------------------------------	
+package io.learn.junit5; //Keeping this test class in same package as the main util class helps you to have access on the util class. its just a convention.
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+class MathUtilsTest {
+	@Test
+	void test() {
+		//fail("Not yet implemented");
+		System.out.println("Success");
+	}
+}
+
+whenever we are doing run as junit, the id will look for all the classes have methods marked as @Test and will pass those classes to platform to run those tests.
+
+	
+	
+Using Assertions:	
+	In JUNIT test compare the expectation vs reality if both matches then pass else fail.
+	Steps.
+	1. create an instance of the class under test.
+	2. set up inputs
+	3. Execute the code you want to test
+	4. verify the result with what you expected
+	
+	here is sample test case
+	@Test
+	void testAdd() {
+		MathUtils mathUtils = new MathUtils();
+		int expected = 1;
+		int actual = mathUtils.add(1, 1);
+		assertEquals(expected, actual, "We can give a clue like this for a very vast product");
+		}
+		
+		// here assertion means that verifying something that you thougt is true and based on this ideology junit have assert methods like below
+		assertEquals(expected, actual);			//Assert that expected and actual value are equal.
+		assertArrayEquals(expected, actual);	//verifies each itesm in the arrays are equal in the right position.
+		assertIterableEquals(expected, actual); //verifies the value in the iterable are equal in the corrosponding positions.
+
+surefire is a plugin to fire testcases using maven	
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.1</version>
+			</plugin>
+		</plugins>
+	</build>
+	
+	
+assertThrows(ArithmeticException.class, () -> mathUtils.divide(1, 0), "divide be zero should throw an ArithmeticException");
+//This is gonna fail if assertThrows doesn't get a exception thrown in code execution or if it throws a wrong exception.
+	
+What is Test Life cycle and test antipatterns to avoid a test life cycle is in which a test instance is created managed and destroyed, so in case of junit we only are creting the test classes but junit is initializing the test class instance.
+
+JUNIT also gives you some hook to execute a piece of code at a certain points in that lifecycle from the creation of the class to its termination.
+
+when a test class have n no of test methods, then these methods are picked randomly but JUNIT gives @Order annotation using which we can certainly order the test methods execution but we need to make sure that all the test methods are independant to each other and doesnt require aany ordering because if all the methods are independant than these methods can be run parallelly and provide better performance and can run on multiple machines.
+
+so which methods are gonna picked for execution is totally upto JUNIT and doing that JUNIT creates new class instance for every test method run
+
+see below hashcodes for each method execution:
+		Hash code of io.learn.junit5.MathUtilsTestis : 731395981
+		Hash code of io.learn.junit5.MathUtilsis : 1196765369
+		Hash code of io.learn.junit5.MathUtilsTestis : 32017212
+		Hash code of io.learn.junit5.MathUtilsis : 1121454968
+		Hash code of io.learn.junit5.MathUtilsTestis : 2094411587
+		Hash code of io.learn.junit5.MathUtilsis : 1833638914
+		
+Now one more thing about JUNIT is if we are declaring any class variable and the same variable is getting used by different test cases than it is not possible because 
+1. the execution order is not predefined by default in junit and also if we define order as well than as said above the test class obj will be created again by default and the variable value will become the default value again.
+
+
+Using JUnit lifecycle hook annotations:
+
+@BeforeAll	:	Initialize before anything in this class runs or execute 		//This annotation doesnt even wait for the object creation of the test class.
+
+@BeforeEach	:	initialize before each method									//This will still create a seperate class object for all the test methods but we can give an init method like implementation which will do the initialization of MathUtil class object for every test call.
+ex:
+	class MathUtilsTest {
+	MathUtils mathUtils;
+	@BeforeEach
+	void init()
+	{
+		mathUtils = new MathUtils();
+	}
+
+
+
+@AfterAll	:	teardown or execute after all method are done. //method should be static for this as well, all the instance of test caalss would be destroyed before this method gets called.
+
+@AfterEach	:	teardown after each method.
+
+@TestInstance(Lifecycle.PER_CLASS) --> If we dont want to create test class method for all the tets method call we can annotate the tets class with @TestInstance(Lifecycle.PER_CLASS) annotation.
+
+@TestInstance(Lifecycle.PER_METHOD) --> this is a default behavior, the test class instance will be created for all the test methods.
+
+
+Another benefit of @TestInstance(Lifecycle.PER_CLASS) is that the classes annotated with this annotation can have non static method for @AfterAll and @BeforeAll annotated methods, bcoz then JUNIT knows that there is going to be a single instance so no need to mandate such methods static.
+
+@DisplayName("In Progress Scenario")			// This will show the given string for the test name and its a JUNIT coding convention for TDD
+@Disabled										// This test case will be skipped due to this annotation
+void inProgressScenario()
+{
+	fail("This is inProgressScenario");
+}
+
+
+Conditional executions and assumptions:
+
+Conditional executions is a way to execute a test on a particular scenario, below are few annotations for the same.
+				
+	@EnabledOnOs(OS.LINUX) 		// Will execute on the given os env
+	@EnabledOnJre(JRE.JAVA_11)	// will rrun on the given jre env
+	@EnabledIf(value = "") //@EnabledIf is used to determine whether the annotated test class or test method is enabled by evaluating a script. 
+							//The decision is made by interpreting the return value of the supplied script, according to the following table. 
+							//The annotated element will be enabled if the string value is Boolean.TRUE. 
+	@EnabledIfSystemProperty(matches="",named="") // This is used to signal that the annotated test class or test method is only enabled if the value of the specified system property matches the specified regular expression. 
+	@EnabledIfEnvironmentVariable(matches = "", named = "") //This  is used to signal that the annotated test class or test method is only enabled if the value of the specified environment variable matches the specified regular expression. 
+	
+assumptions:
+	we can handle external factors by using the concept of assumptions as below
+	
+		import 			static 				org.junit.jupiter.api.Assumptions.assumeTrue;
+		assumeTrue(() -> false); //suppose this test is dependent on a a particular service or 3rd party application 
+		//which we don't have any control whatsoever and if that service is not up than running this test doesn't make any sense
+		//so we can call any method and get a boolean response or pass on a lambda to get a boolean response, if the response is true 
+		//than the execution of this test will happen else the test will be marked as skipped.
+	
+Using @AssertAll:
+	if we want to run a bunch of assertEquals method together than we can use AssertAll equal method and pass the supplier lambda for assertEquals seperated with a comma like below, this will return true if all the assertEquals expression will pass.
+	assertAll(
+		() -> assertEquals(20, mathUtils.multiply(10, 2)),
+		() -> assertEquals(-1, mathUtils.multiply(1, -1)),
+		() -> assertEquals(0, mathUtils.multiply(2, 0))
+	);
+	
+Using @Nested:
+	if we have multiple methods with similar functionality than its better to have them in a hirerichal nested form and @Mested is the way to acieve that.
+	
+	@DisplayName("addTest Nested class")
+	@Nested
+	class addTest{
+		@Test
+		@DisplayName("testPositiveAdd + Method")
+		void testPositiveAdd() {
+			assertEquals(2, mathUtils.add(1, 1), "Shouls return addition of 2 postive values");
+		}
+		
+		@Test
+		@DisplayName("testNegativeAdd - Method")
+		void testNegativeAdd() {
+			assertEquals(-2, mathUtils.add(-1, -1), "Shouls return addition of 2 negative values");
+		}
+		
+	}
+		
+
+
+
+Using supplier for assert messages: 
+	suppose we want to compose a message by appending string or calling a function to get a failure message than there would be processing time involved for the message append operation or function execution but we can avoid unnecessary append operation or function execution if wrap this assert message into a supplier lambda, this lambda will get executed only when there is a failure in the the assert expression.
+
+	@Test
+	@DisplayName("TestAdd Method")
+	void testAdd() {
+		int expected = 2;
+		int actual = mathUtils.add(1, 2);
+		assertEquals(expected, actual, ()-> "failed, expected "+expected + " but got "+actual); // using supplier lambda expression for assert messages for optimizing the assert message
+	}
+
+Repeated Test 
+	@RepeatedTest(3)
+	void testComputeCircleRadius(RepetitionInfo repetitionInfo) //Here Dependency injection is happening
+	{
+		//MathUtils mathUtils = new MathUtils();
+		assertEquals(314.1592653589793, mathUtils.computeCircleArea(10),"should return right circle area, failed for repetition: "+repetitionInfo.getCurrentRepetition());
+	}
+
+Tagging tests with @Tag:
+	Suppose I want to run specific type of tests for a run like unit test or sanity test., than I can mark the test methods with a Tag and run a particular type of test.	
+	@Tag("Sanity") or @Tag("Unit")
+	
+	we can run a partiular type of test in eclipse (by creating a new run config and adding Unit or Sanity tag) as well as in surefilre by doing the maven configuration
+	
+TestInfo and TestReporter: are the interfaces not classes, the impl is done for these by junit and initialization will be done by using DI.
+	Test Info is used to keep information about the test cases and test reporter lets us to access test logs and lets you update those logs. The instance of TestInfo and TestReporter are managed by JUNIT and initialized by JUNIT by using dependency injection.
+	
+	TestInfo can be used to get the method display name or tags that the method is been assigned to and based on that information we can control the flow of the application and also use the metadata from this object into our logging as well.
+
+	TestReporter already have by default setup that can be used in logging it managed by the JUNIT and it will return timestamp along with message formatted same as TestInfo in a logger not in sysout.
+	
+			testReporter.publishEntry("Running "+testInfo.getDisplayName() +" with "+testInfo.getTags()+" tags");
+
+	

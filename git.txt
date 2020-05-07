@@ -1,0 +1,12 @@
+echo "# MicroserviceTrainingCode" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin https://github.com/sam-india/MicroserviceTrainingCode.git
+git push -u origin master
+git status
+git pull
+git add --all
+git commit -m "All Projects"
+git remote add origin https://github.com/sam-india/MicroserviceTrainingCode.git
+git push -u origin master
