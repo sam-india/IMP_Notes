@@ -1,0 +1,20 @@
+import java.awt.*;
+
+public class RobotExample {
+    public static void main(String[] args) throws Exception {
+        // Create a new Robot object
+        Robot robot = new Robot();
+
+        // Move the mouse pointer to the (100, 100) coordinates
+        robot.mouseMove(100, 100);
+
+        // Press the left mouse button
+        robot.mousePress(InputEvent.BUTTON1_MASK);
+
+        // Hold down the left mouse button for 1 second
+        robot.delay(1000);
+
+        // Release the left mouse button
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);
+    }
+}
