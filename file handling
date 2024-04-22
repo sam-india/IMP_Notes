@@ -48,3 +48,86 @@ public class MoveFilesToNamedFolders {
         System.out.println("Finished moving files.");
     }
 }
+
+
+
+import java.io.File;
+import java.io.IOException;
+
+public class MoveFilesAndCreateCopies {
+
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: java MoveFilesAndCreateCopies <source_folder>");
+            return;
+        }
+
+        // Get the source folder path from the argument
+        String sourceFolderPath = args[0];
+
+        // Create a File object for the source folder
+        File sourceFolder = new File(sourceFolderPath);
+
+        // Check if the source folder exists and is a directory
+        if (!sourceFolder.exists() || !sourceFolder.isDirectory()) {
+            System.out.println("Error: Source folder '" + sourceFolderPath + "' does not exist or is not a directory.");
+            return;
+        }
+
+        // Get list of files in the source folder
+        File[] files = sourceFolder.listFiles();
+
+        // Move each file to a new folder with the same name
+        for (File file : files) {
+            if (!file.isFile()) {
+                continue; // Skip non-files (directories)
+            }
+
+            String fileName = file.getName();
+            File newFolder = new File(sourceFolder, fileName);
+
+            // Create the new folder
+            if (!newFolder.mkdirs()) {
+                System.out.println("Error: Failed to create folder '" + newFolder.getPath() + "'");
+                continue;
+            }
+
+            // Copy the original file
+            if (!copyFile(file, new File(newFolder, fileName))) {
+                System.out.println("Error: Failed to copy file '" + fileName + "'");
+                continue;
+            }
+
+            // Create and copy a copy with rollback.sql extension
+            File rollbackFile = new File(newFolder, fileName + ".rollback.sql");
+            if (!copyFile(file, rollbackFile)) {
+                System.out.println("Error: Failed to copy file '" + fileName + "' with rollback.sql extension");
+                continue;
+            }
+
+            // Create and copy a copy with .ctl extension
+            File controlFile = new File(newFolder, fileName + ".ctl");
+            if (!copyFile(file, controlFile)) {
+                System.out.println("Error: Failed to copy file '" + fileName + "' with .ctl extension");
+                continue;
+            }
+
+            // Move the original file (optional)
+            if (!file.renameTo(new File(newFolder, fileName))) {
+                System.out.println("Error: Failed to move file '" + fileName + "' to folder '" + newFolder.getPath() + "'");
+            }
+        }
+
+        System.out.println("Finished processing files.");
+    }
+
+    private static boolean copyFile(File source, File destination) {
+        try {
+            // Use more robust copy logic (e.g., Apache Commons IO) for production use
+            return source.renameTo(destination);
+        } catch (IOException e) {
+            System.out.println("Error copying file: " + e.getMessage());
+            return false;
+        }
+    }
+}
