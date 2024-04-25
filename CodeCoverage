@@ -1,0 +1,173 @@
+src/
+├── main/
+│   ├── java/
+│   │   └── com/
+│   │       └── example/
+│   │           ├── services/
+│   │           │   ├── UserService.java
+│   │           │   └── UserRepository.java
+│   │           ├── tests/
+│   │           │   ├── UnitTestGenerator.java
+│   │           │   └── DependencyInjectionService.java
+│   │           └── Application.java
+│   └── resources/
+└── test/
+    └── java/
+        └── com/
+            └── example/
+                └── tests/
+                    └── ApplicationTests.java
+
+
+// UserService.java
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+
+    @Autowired
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public User getUserById(long id) {
+        return userRepository.findById(id);
+    }
+}
+
+// UserRepository.java
+public interface UserRepository {
+    User findById(long id);
+}
+
+// DependencyInjectionService.java
+@Service
+public class DependencyInjectionService {
+
+    public List<Class<?>> getDependencies(Class<?> clazz) {
+        List<Class<?>> dependencies = new ArrayList<>();
+        // Implement logic to find and return dependencies for the given class
+        return dependencies;
+    }
+}
+
+// Application.java
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+
+// UnitTestGenerator.java
+@Service
+public class UnitTestGenerator {
+
+    @Autowired
+    private DependencyInjectionService dependencyInjectionService;
+
+    public void generateTestsForPackage(String packageName) {
+        List<Class<?>> classes = getAllClassesInPackage(packageName);
+
+        for (Class<?> clazz : classes) {
+            String testClassCode = generateTestClass(clazz);
+            writeToFile(clazz.getSimpleName() + "Test", testClassCode);
+        }
+    }
+
+    private List<Class<?>> getAllClassesInPackage(String packageName) {
+        // Implement logic to get all classes in a package
+        return Collections.emptyList();
+    }
+
+    private String generateTestClass(Class<?> clazz) {
+        StringBuilder sb = new StringBuilder();
+
+        // Imports
+        sb.append("import org.junit.jupiter.api.Test;\n");
+        sb.append("import org.mockito.InjectMocks;\n");
+        sb.append("import org.mockito.Mock;\n");
+        sb.append("import org.springframework.boot.test.context.SpringBootTest;\n");
+        sb.append("import static org.mockito.Mockito.when;\n");
+        sb.append("import static org.junit.jupiter.api.Assertions.assertNotNull;\n\n");
+
+        // Class Declaration
+        sb.append("@SpringBootTest\n");
+        sb.append("class ").append(clazz.getSimpleName()).append("Test {\n");
+
+        // Mock Declarations
+        List<Class<?>> dependencies = dependencyInjectionService.getDependencies(clazz);
+        for (Class<?> dependency : dependencies) {
+            sb.append("    @Mock\n");
+            sb.append("    private ").append(dependency.getSimpleName()).append(" mock")
+                    .append(dependency.getSimpleName()).append(";\n");
+        }
+
+        // InjectMocks
+        sb.append("    @InjectMocks\n");
+        sb.append("    private ").append(clazz.getSimpleName()).append(" ").append(clazz.getSimpleName().toLowerCase()).append(";\n");
+
+        // Test Methods
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (Modifier.isPublic(method.getModifiers())) {
+                sb.append("\n    @Test\n");
+                sb.append("    void test").append(method.getName().substring(0, 1).toUpperCase())
+                        .append(method.getName().substring(1)).append("() {\n");
+
+                // Mocks Initialization
+                for (Class<?> dependency : dependencies) {
+                    sb.append("        mock").append(dependency.getSimpleName()).append(" = new ").append(dependency.getSimpleName()).append("();\n");
+                }
+
+                // Inject Mocks
+                for (Field field : clazz.getDeclaredFields()) {
+                    if (dependencies.contains(field.getType())) {
+                        sb.append("        ").append(clazz.getSimpleName().toLowerCase()).append(".")
+                                .append(field.getName()).append(" = mock").append(field.getType().getSimpleName()).append(";\n");
+                    }
+                }
+
+                // Method Call
+                sb.append("        ").append(clazz.getSimpleName().toLowerCase()).append(".")
+                        .append(method.getName()).append("();\n");
+
+                // Assertions (you may need to adjust this based on your actual method return type)
+                sb.append("        // Add assertions here\n");
+
+                sb.append("    }\n");
+            }
+        }
+
+        sb.append("}\n");
+
+        return sb.toString();
+    }
+
+    private void writeToFile(String fileName, String content) {
+         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            writer.write(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle the exception accordingly, e.g., logging an error
+        }
+    }
+}
+
+// ApplicationTests.java
+@SpringBootTest
+class ApplicationTests {
+
+    @Test
+    void contextLoads() {
+        // Ensure the application context loads successfully
+    }
+}
+
+// ApplicationTests.java
+@SpringBootTest
+class ApplicationTests {
+
+    @Test
+    void contextLoads() {
+        // Ensure the application context loads successfully
+    }
+}
