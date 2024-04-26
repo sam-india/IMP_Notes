@@ -1,0 +1,74 @@
+You're correct. The `@Id` annotation should only be applied to the primary key column(s). Let's adjust the code to place the `@Id` annotation only on the appropriate column(s) based on the metadata retrieved from the database. Here's the corrected version:
+
+```java
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class EntityGenerator {
+    private static final String JDBC_DRIVER = "your_jdbc_driver";
+    private static final String DB_URL = "your_database_url";
+    private static final String USER = "your_database_user";
+    private static final String PASS = "your_database_password";
+
+    public static void main(String[] args) {
+        Connection conn = null;
+        try {
+            // Connect to the database
+            conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+            // Get metadata
+            DatabaseMetaData metaData = conn.getMetaData();
+
+            // Get tables
+            ResultSet tables = metaData.getTables(null, null, "%", new String[]{"TABLE"});
+
+            while (tables.next()) {
+                String tableName = tables.getString("TABLE_NAME");
+                ResultSet columns = metaData.getColumns(null, null, tableName, null);
+
+                StringBuilder entityClass = new StringBuilder();
+                entityClass.append("@Entity\n");
+                entityClass.append("public class ").append(tableName).append(" {\n");
+
+                while (columns.next()) {
+                    String columnName = columns.getString("COLUMN_NAME");
+                    String columnType = columns.getString("TYPE_NAME");
+
+                    // Generate fields with annotations
+                    entityClass.append("\t@Column(name = \"").append(columnName).append("\")\n");
+                    if ("YES".equals(columns.getString("IS_AUTOINCREMENT")) || columns.getString("COLUMN_DEF") != null) {
+                        // Primary key or generated column
+                        entityClass.append("\t@Id\n");
+                        entityClass.append("\t@GeneratedValue(strategy = GenerationType.IDENTITY)\n");
+                    }
+                    entityClass.append("\tprivate ").append(columnType).append(" ").append(columnName).append(";\n");
+                }
+
+                entityClass.append("}");
+
+                // Write entity class to file
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableName + ".java"))) {
+                    writer.write(entityClass.toString());
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+This version checks if a column is auto-incremented or has a default value to determine if it should be considered a primary key and thus annotated with `@Id` and `@GeneratedValue`. Adjustments like these can be made according to your specific database schema and requirements.
