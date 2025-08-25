@@ -1,0 +1,91 @@
+1. Agentic AI Model – Data Flow Chart
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(user, "End User", "Bank analyst, compliance officer, fraud investigator")
+System(aiAgent, "Agentic AI Model", "Orchestrates tasks via APIs using LLM + policies")
+System_Ext(apps, "Enterprise Applications", "KYC, AML, Fraud Detection systems")
+System_Ext(apis, "APIs", "Microservices exposed for task execution")
+
+Rel(user, aiAgent, "Sends NL Prompt or Task Request")
+Rel(aiAgent, apis, "Calls APIs securely (REST/gRPC/Kafka)")
+Rel(apis, apps, "Executes action in enterprise applications")
+Rel_Back(apps, aiAgent, "Returns data/results")
+Rel(aiAgent, user, "Presents insights, workflow automation")
+
+@enduml
+
+
+---
+
+2. General vs Specialized Training Flow
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(annotator, "Business Users / SMEs", "Provide labeled tasks, domain expertise")
+System_Boundary(training, "Training Pipeline") {
+  
+  Container(genModel, "General Foundation Model", "LLM (e.g., Copilot, GPT)", "Pre-trained general AI capabilities")
+  Container(specialModel, "Specialized Model", "Fine-tuned / domain-specific", "Trained for KYC, AML, Fraud, etc.")
+  Container(trainingData, "Training Data", "Documents, APIs logs, workflows", "Used for supervised fine-tuning or RAG")
+  Container(ragStore, "Knowledge Store", "Vector DB / Policy DB", "Stores policies, compliance docs, embeddings")
+}
+
+Rel(annotator, trainingData, "Provides annotations, corrections")
+Rel(trainingData, genModel, "Used for fine-tuning / prompts")
+Rel(genModel, specialModel, "Specialization via fine-tuning / adapters")
+Rel(specialModel, ragStore, "Uses domain knowledge via RAG")
+Rel(specialModel, annotator, "Delivers specialized insights")
+
+@enduml
+
+
+---
+
+3. CogniAiOps Overall Architecture (with MCP, RAG, Multi-Bot/Model)
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "End Users", "Analysts, Compliance Officers, Fraud Teams")
+
+System_Boundary(cogni, "CogniAiOps Platform") {
+  
+  Container(mcp, "Model Control Plane (MCP)", "Manages lifecycle of AI models/bots")
+  Container(rag, "RAG Engine", "Retrieval Augmented Generation", "Fetches from KB, vector DB, policy store")
+  Container(botManager, "Multi-Agent/Bot Orchestrator", "Agentic Framework", "Assigns tasks across specialized AI agents")
+  Container(security, "RBAC + Policy Layer", "Access control & compliance enforcement")
+  Container(apiLayer, "API Gateway/Adapters", "REST/gRPC/Kafka", "Connects to enterprise microservices")
+}
+
+System_Ext(apps, "Enterprise Applications", "KYC, AML, Fraud, Core Banking")
+
+Rel(user, botManager, "Natural Language tasks & queries")
+Rel(botManager, rag, "Fetches domain knowledge & compliance policies")
+Rel(botManager, mcp, "Delegates to right AI model/bot")
+Rel(mcp, apps, "Triggers specialized API calls via adapters")
+Rel(apiLayer, apps, "Executes workflow tasks")
+Rel(apps, apiLayer, "Returns results")
+Rel(security, botManager, "Enforces access & audit trails")
+Rel(botManager, user, "Presents orchestrated insights & reports")
+
+@enduml
+
+
+---
+
+✅ These cover:
+
+1. Agentic AI Model (data flow)
+
+
+2. General + Specialized Training process
+
+
+3. CogniAiOps overall architecture with MCP, RAG, multi-bot orchestration
+
+
+
+Would you like me to also merge all 3 into one consolidated high-level diagram (to show progression from training → agentic AI model → CogniAiOps platform)?
