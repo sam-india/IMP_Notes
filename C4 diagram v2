@@ -1,0 +1,428 @@
+@startuml
+' ======================================================
+' Include C4 notations
+' ======================================================
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+' ======================================================
+' 1. Context Diagram
+' ======================================================
+LAYOUT_LEFT_RIGHT()
+Person(user, "End Users", "Analysts, Compliance Officers, Fraud Ops")
+System_Boundary(cogni, "CongniAiOps Platform") {
+  System(congni, "CongniAiOps", "Unified AI Layer", "Natural language → API orchestration, RAG, RBAC, Audit")
+}
+System_Ext(kyc, "KYC Application", "Onboarding, Screening")
+System_Ext(aml, "AML Platform", "Transaction Monitoring, Alerts")
+System_Ext(fraud, "Fraud Platform", "Payments, Device/Auth telemetry")
+System_Ext(core, "Core Banking & Data Lake", "Payments, MDM, Cases")
+System_Ext(sanctions, "Sanctions/PEP Lists", "External datasets")
+System_Ext(media, "Adverse Media Sources", "External feeds")
+
+Rel(user, congni, "Prompts, docs, task requests")
+Rel(congni, kyc, "API calls/events")
+Rel(congni, aml, "API calls/events")
+Rel(congni, fraud, "API calls/events")
+Rel(congni, core, "Data fetch/update")
+Rel(congni, sanctions, "Screening checks")
+Rel(congni, media, "Media intelligence")
+Rel(congni, user, "Insights, results")
+
+' ======================================================
+' 2. Container Diagram
+' ======================================================
+System_Boundary(cogniC, "CongniAiOps Platform") {
+  Container(ui, "NL Interface", "Web/API", "Prompts, forms, uploads")
+  Container(orchestrator, "Bot Orchestrator", "Service", "Plan/Act/Reflect, multi-agent routing")
+  Container(mcp, "Model Control Plane", "Service", "Model/bot selection, A/B tests")
+  Container(rag, "RAG Engine", "Service", "Retrieval, reranking, citations")
+  Container(policy, "Policy & Guardrails", "Service", "RBAC/ABAC, PII/DLP masking")
+  Container(gateway, "API Gateway", "Service", "REST/gRPC connectors")
+  Container(events, "Event Adapter", "Service", "Kafka integration")
+  Container(audit, "Audit & Telemetry", "Service", "Immutable logs, traces")
+  ContainerDb(vecdb, "Vector DB", "DB", "Embeddings for docs/policies")
+  ContainerDb(policykb, "Policy KB", "DB", "Policies, SOPs, sanctions rules")
+}
+
+Rel(user, ui, "Submit prompts/tasks")
+Rel(ui, policy, "Pre-checks")
+Rel(ui, orchestrator, "Forward intent/entities")
+Rel(orchestrator, rag, "Retrieve knowledge")
+Rel(rag, vecdb, "Query embeddings")
+Rel(rag, policykb, "Fetch SOPs/policies")
+Rel(orchestrator, mcp, "Model selection")
+Rel(orchestrator, gateway, "API execution")
+Rel(orchestrator, events, "Async fan-out")
+Rel(gateway, kyc, "KYC API calls")
+Rel(gateway, aml, "AML API calls")
+Rel(gateway, fraud, "Fraud API calls")
+Rel(orchestrator, audit, "Audit logs")
+
+' ======================================================
+' 3. Component Diagram (AI Core)
+' ======================================================
+Container_Boundary(ai_core, "AI Core Services") {
+  Component(nl, "NL Interface", "Component", "Intent detection, doc parsing")
+  Component(plan, "Planner", "Component", "Decompose tasks, Plan/Act/Reflect")
+  Component(exec, "Tool Executor", "Component", "REST/gRPC execution")
+  Component(mem, "Session Memory", "Component", "Context, conversations")
+  Component(ragret, "Retriever", "Component", "Vector similarity search")
+  Component(ragrank, "Reranker", "Component", "Candidate ranking")
+  Component(embed, "Embedder", "Component", "Chunk+embed docs")
+  Component(policyc, "Policy Checker", "Component", "RBAC, DLP, PII enforcement")
+  Component(router, "MCP Router", "Component", "Model routing, A/B tests")
+  Component(explain, "Explainability", "Component", "Citations, trace explain")
+}
+
+Rel(nl, plan, "Pass intent/entities")
+Rel(plan, ragret, "Knowledge context")
+Rel(ragret, ragrank, "Re-rank")
+Rel(ragret, vecdb, "Embeddings")
+Rel(plan, router, "Model select")
+Rel(plan, exec, "Tool execution")
+Rel(exec, gateway, "API call")
+Rel(exec, events, "Async publish")
+Rel(policyc, exec, "Enforce policies")
+Rel(embed, vecdb, "Store embeddings")
+
+' ======================================================
+' 4. Deployment Diagram
+' ======================================================
+Deployment_Node(cluster, "OpenShift/Kubernetes", "K8s") {
+  Deployment_Node(ns, "Namespace: cogni-aiops") {
+    Container(ingress, "Ingress", "Pod(s)", "Routing")
+    Container(nlpod, "NL Interface svc", "Pod(s)", "Prompts, API")
+    Container(orchpod, "Bot Orchestrator", "Pod(s)", "Planner, executor")
+    Container(mcppod, "MCP svc", "Pod(s)", "Model router")
+    Container(ragpod, "RAG svc", "Pod(s)", "Retriever, reranker")
+    Container(polpod, "Policy svc", "Pod(s)", "RBAC/DLP")
+    Container(gwpod, "Gateway", "Pod(s)", "API connectors")
+    Container(kafkapod, "Kafka Adapter", "Pod(s)", "Async integration")
+    Container(auditpod, "Audit Logger", "Pod(s)", "Logs, traces")
+  }
+  Deployment_Node(nsdata, "Namespace: data-plane") {
+    ContainerDb(vecdbd, "Vector DB", "StatefulSet", "Embeddings")
+    ContainerDb(policydb, "Policy KB", "PVC", "Policies")
+  }
+}
+
+Rel(nlpod, orchpod, "Intent flow")
+Rel(orchpod, ragpod, "Knowledge fetch")
+Rel(orchpod, mcppod, "Model routing")
+Rel(orchpod, gwpod, "API execution")
+Rel(orchpod, kafkapod, "Event publish")
+Rel(orchpod, auditpod, "Audit logs")
+
+' ======================================================
+' 5. Sequence Diagram: Request Lifecycle
+' ======================================================
+@enduml
+@startuml
+actor User as user
+participant "NL Interface" as nl
+participant "Policy & RBAC" as policy
+participant "RAG Engine" as rag
+participant "Bot Orchestrator" as orch
+participant "MCP" as mcp
+participant "API Gateway" as gateway
+participant "Kafka Adapter" as kafka
+participant "Apps (KYC/AML/Fraud)" as apps
+participant "Audit" as audit
+participant "Response" as resp
+
+user -> nl : 1. Submit prompt/task
+nl -> policy : 2. Pre-checks
+policy --> nl : OK/mask/deny
+nl -> orch : 3. Intent/entities
+orch -> rag : 4. Retrieve knowledge
+rag --> orch : Context
+orch -> mcp : 5. Select model/agent
+mcp --> orch : Route
+orch -> gateway : 6a. API calls
+orch -> kafka : 6b. Async events
+gateway -> apps : 7. Invoke APIs
+apps --> gateway : Results
+gateway --> orch : Responses
+kafka --> orch : Async results
+orch -> policy : 8. Post-check
+policy --> orch : Approved output
+orch -> audit : 9. Audit logs
+orch -> resp : 10. Assemble output
+resp --> user : Final insight
+@enduml
+
+' ======================================================
+' 6A. Training Lifecycle (Container)
+' ======================================================
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+Person(sme, "SMEs", "Provide labels, corrections")
+Person(mle, "MLE/Data Scientist", "Owns training pipeline")
+
+System_Boundary(train, "Training Lifecycle") {
+  Container(srcPolicies, "Policy Source", "Docs", "Policies, SOPs")
+  Container(srcCases, "Case Notes", "DB", "Historical cases")
+  Container(srcEvents, "Event Logs", "Data Lake", "Telemetry")
+  Container(srcMedia, "Media Feeds", "Feeds", "Adverse news")
+
+  Container(ingest, "RAG Ingestion", "Job", "Embed, chunk, index")
+  ContainerDb(vecdb, "Vector DB", "DB", "Embeddings")
+
+  Container(ftprep, "Training Data Builder", "Job", "Curate prompts/responses")
+  Container(ft, "Fine-tuning", "Job", "Adapters, LoRA")
+  Container(eval, "Evaluation & Safety", "Service", "Benchmarks, red-team")
+  Container(reg, "Model Registry", "Service", "Versioned models")
+  Container(mcp, "MCP Promotion", "Service", "Canary/A-B")
+  Container(obs, "Observability", "Service", "Metrics, cost, quality")
+  Container(policy, "Governance", "Service", "RBAC/PII, approvals")
+  Container(congni, "Runtime", "Platform", "Orchestrator + RAG")
+}
+
+Rel(sme, ftprep, "Provide labels")
+Rel(sme, srcPolicies, "Update policies")
+Rel(mle, ft, "Run fine-tuning")
+Rel(srcPolicies, ingest, "Docs")
+Rel(srcCases, ingest, "Cases")
+Rel(srcEvents, ingest, "Logs")
+Rel(srcMedia, ingest, "Media")
+Rel(ingest, vecdb, "Store embeddings")
+Rel(ftprep, ft, "Curated data")
+Rel(ft, eval, "Candidate models")
+Rel(eval, reg, "Register if pass")
+Rel(reg, mcp, "New version")
+Rel(mcp, congni, "Deploy canary/A-B")
+Rel(congni, obs, "Runtime metrics")
+Rel(obs, ftprep, "Feedback to curation")
+Rel(policy, ingest, "PII/DLP enforcement")
+Rel(policy, ftprep, "Access/masking")
+@enduml
+
+' ======================================================
+' 6B. Training Lifecycle (Sequence)
+' ======================================================
+@startuml
+actor "SME" as sme
+participant "Policy Source" as pol
+participant "Cases/Logs" as data
+participant "RAG Ingestion" as ingest
+participant "Vector DB" as vec
+participant "Training Builder" as tdb
+participant "Fine-tune" as ft
+participant "Eval/Safety" as eval
+participant "Model Registry" as reg
+participant "MCP" as mcp
+participant "Runtime" as rt
+participant "Observability" as obs
+participant "Governance" as gov
+
+sme -> pol : Update policies/templates
+data -> ingest : Export data
+gov -> ingest : Enforce DLP/PII
+ingest -> vec : Embed, index
+
+sme -> tdb : Label data
+tdb -> ft : Curated dataset
+ft -> eval : Candidate models
+eval --> ft : Fail → iterate
+eval -> reg : Pass → register
+reg -> mcp : New version
+mcp -> rt : Deploy canary/A-B
+rt -> obs : Metrics
+obs -> mcp : Health signals
+mcp --> rt : Promote/rollback
+@enduml
+
+' ======================================================
+' 6C. Training Lifecycle (Activity with Gates)
+' ======================================================
+@startuml
+start
+:Collect Data (Cases, Policies, Media, Logs);
+:Apply Governance (RBAC, PII Masking, Approvals);
+:Ingest into RAG (Chunk, Embed, Index);
+
+:Curate Training Sets (Prompt/Response, Labels);
+
+if (Fine-tune Successful?) then (Yes)
+  :Run Evaluation & Safety Tests;
+  if (Pass Benchmarks?) then (Yes)
+    :Register Model in Registry;
+    :Deploy via MCP (Canary, A/B);
+    if (Runtime KPIs Met?) then (Yes)
+      :Promote to Production;
+    else (No)
+      :Rollback to Stable;
+    endif
+  else (No)
+    :Retrain / Adjust Hyperparameters;
+  endif
+else (No)
+  :Return to Data Curation;
+endif
+
+:Continuous Feedback from Runtime Observability;
+:Loop back into Data/Training;
+stop
+@enduml
+
+
+Great addition 🚀 — this ties directly to your agentic learning loop where the system observes real user actions inside enterprise apps (clicks, API calls, workflows) and turns them into training signals.
+
+We’ll integrate that into the Training Lifecycle diagrams (6A/6B/6C). Here’s the refined design:
+
+
+---
+
+🔹 6A: Training Lifecycle (Container-level, Updated)
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+Person(sme, "SMEs", "Provide labels, corrections")
+Person(mle, "MLE/Data Scientist", "Owns training pipeline")
+Person(user, "End Users", "Perform tasks in enterprise apps")
+
+System_Boundary(train, "Training Lifecycle") {
+  Container(srcPolicies, "Policy Source", "Docs", "Policies, SOPs")
+  Container(srcCases, "Case Notes", "DB", "Historical cases")
+  Container(srcEvents, "Event Logs", "Data Lake", "Telemetry")
+  Container(srcMedia, "Media Feeds", "Feeds", "Adverse news")
+  Container(intercept, "User Action Interceptor", "Middleware", "Captures user workflows, API calls, UI actions in enterprise apps")
+
+  Container(ingest, "RAG Ingestion", "Job", "Embed, chunk, index")
+  ContainerDb(vecdb, "Vector DB", "DB", "Embeddings")
+
+  Container(ftprep, "Training Data Builder", "Job", "Curate prompts/responses, generate training pairs")
+  Container(ft, "Fine-tuning", "Job", "Adapters, LoRA")
+  Container(eval, "Evaluation & Safety", "Service", "Benchmarks, red-team")
+  Container(reg, "Model Registry", "Service", "Versioned models")
+  Container(mcp, "MCP Promotion", "Service", "Canary/A-B")
+  Container(obs, "Observability", "Service", "Metrics, cost, quality")
+  Container(policy, "Governance", "Service", "RBAC/PII, approvals")
+  Container(congni, "Runtime", "Platform", "Orchestrator + RAG")
+}
+
+Rel(user, intercept, "Perform workflows (clicks, API calls, tasks)")
+Rel(intercept, srcEvents, "Log structured events (user actions, workflows)")
+Rel(intercept, ftprep, "Generate training pairs (user task → API sequence)")
+Rel(sme, ftprep, "Provide labels/corrections")
+Rel(sme, srcPolicies, "Update policies")
+Rel(mle, ft, "Run fine-tuning")
+Rel(srcPolicies, ingest, "Docs")
+Rel(srcCases, ingest, "Cases")
+Rel(srcEvents, ingest, "Logs")
+Rel(srcMedia, ingest, "Media")
+Rel(ingest, vecdb, "Store embeddings")
+Rel(ftprep, ft, "Curated data")
+Rel(ft, eval, "Candidate models")
+Rel(eval, reg, "Register if pass")
+Rel(reg, mcp, "New version")
+Rel(mcp, congni, "Deploy canary/A-B")
+Rel(congni, obs, "Runtime metrics")
+Rel(obs, ftprep, "Feedback to curation")
+Rel(policy, ingest, "PII/DLP enforcement")
+Rel(policy, ftprep, "Access/masking")
+@enduml
+
+
+---
+
+🔹 6B: Training Lifecycle (Sequence, Updated)
+
+@startuml
+actor "User" as user
+actor "SME" as sme
+participant "Action Interceptor" as intercept
+participant "Event Logs" as logs
+participant "Training Builder" as tdb
+participant "Fine-tune" as ft
+participant "Eval/Safety" as eval
+participant "Model Registry" as reg
+participant "MCP" as mcp
+participant "Runtime" as rt
+participant "Observability" as obs
+
+user -> intercept : Perform tasks (UI clicks, workflows, API calls)
+intercept -> logs : Record structured events
+intercept -> tdb : Convert into (task → API call) training pairs
+
+sme -> tdb : Validate/correct labels
+tdb -> ft : Curated training dataset
+ft -> eval : Candidate models
+eval -> reg : If pass → register new version
+eval --> ft : If fail → iterate
+reg -> mcp : New version available
+mcp -> rt : Deploy canary/A-B
+rt -> obs : Emit metrics
+obs -> mcp : Report health
+mcp --> rt : Promote or rollback
+obs -> tdb : Feed corrections into future data
+@enduml
+
+
+---
+
+🔹 6C: Training Lifecycle (Activity with Gates, Updated)
+
+@startuml
+start
+:User performs tasks (UI/API/workflows);
+:Intercept actions → create structured events;
+:Convert events → (task → API sequence) pairs;
+
+:Collect additional Data (Cases, Policies, Media);
+:Apply Governance (RBAC, PII Masking, Approvals);
+
+:Ingest into RAG (Chunk, Embed, Index);
+
+:Curate Training Sets (Prompts, Labeled Data);
+
+if (Fine-tune Successful?) then (Yes)
+  :Run Evaluation & Safety Tests;
+  if (Pass Benchmarks?) then (Yes)
+    :Register Model in Registry;
+    :Deploy via MCP (Canary, A/B);
+    if (Runtime KPIs Met?) then (Yes)
+      :Promote to Production;
+    else (No)
+      :Rollback to Stable;
+    endif
+  else (No)
+    :Retrain / Adjust Hyperparameters;
+  endif
+else (No)
+  :Return to Data Curation;
+endif
+
+:Continuous Feedback from Observability + User corrections;
+:Loop back into Interceptor & Training;
+stop
+@enduml
+
+
+---
+
+✅ What Changed
+
+Added User Action Interceptor (sits inside enterprise apps or as middleware).
+
+Captures actual user workflows → converts them into training data (task → API calls).
+
+Feeds directly into Training Data Builder.
+
+SMEs can review/validate, so self-learning with human guardrails.
+
+Closed loop: User action → Training → Runtime → Feedback → Better automation.
+
+
+
+---
+
+👉 Do you want me to generate visual PNG diagrams for these updated training lifecycle flows (with the interceptor included), so you can drop them into your presentation directly?
+
