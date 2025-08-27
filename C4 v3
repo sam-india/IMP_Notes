@@ -1,0 +1,113 @@
+Slide 2 → “How it Works” (Architecture + Training Flow)
+
+This is a Container-level C4 diagram showing:
+
+Users → AI Plugin (CongniAiOps) → Enterprise Apps
+
+Training lifecycle loop (user action interceptor → RAG → fine-tuning → promotion → runtime)
+
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "End User", "Performs tasks in enterprise apps")
+System_Boundary(apps, "Enterprise Applications") {
+  Container(app1, "KYC App", "Java/Angular", "Compliance workflows")
+  Container(app2, "AML App", "Python", "Transaction monitoring")
+  Container(app3, "Fraud Detection App", "Java", "Fraud case investigation")
+}
+
+System_Boundary(ai, "CongniAiOps AI Plugin") {
+  Container(plugin, "AI Plugin Layer", "SDK/Library", "Abstract AI interface inside each app")
+  Container(rag, "RAG Corpus", "Vector DB", "Policies, SOPs, past cases, media feeds")
+  Container(policy, "Governance Engine", "Service", "RBAC, audit, PII masking")
+  Container(orchestrator, "AI Orchestrator", "Service", "Natural language → API orchestration")
+}
+
+System_Boundary(train, "Training Lifecycle") {
+  Container(intercept, "User Action Interceptor", "Middleware", "Captures workflows (UI/API)")
+  Container(ftprep, "Training Data Builder", "Jobs", "Curates prompt/response pairs")
+  Container(ft, "Fine-tuning/Adapters", "Jobs", "Domain adapters (KYC/AML/Fraud)")
+  Container(eval, "Eval & Safety Gates", "Service", "Benchmarks, red-team")
+  Container(reg, "Model Registry", "Service", "Versioned models")
+  Container(mcp, "MCP", "Service", "Promotion/rollback")
+}
+
+Rel(user, app1, "Works in")
+Rel(user, app2, "Works in")
+Rel(user, app3, "Works in")
+
+Rel(app1, plugin, "Invokes AI plugin")
+Rel(app2, plugin, "Invokes AI plugin")
+Rel(app3, plugin, "Invokes AI plugin")
+
+Rel(plugin, orchestrator, "Delegates tasks")
+Rel(orchestrator, rag, "Retrieve context")
+Rel(orchestrator, policy, "Check policies")
+Rel(orchestrator, app1, "Call APIs securely")
+Rel(orchestrator, app2, "Call APIs securely")
+Rel(orchestrator, app3, "Call APIs securely")
+
+Rel(intercept, ftprep, "Convert user actions to training data")
+Rel(ftprep, ft, "Curated datasets")
+Rel(ft, eval, "Candidate models")
+Rel(eval, reg, "Register model if pass")
+Rel(reg, mcp, "Push to MCP")
+Rel(mcp, orchestrator, "Deploy new model version")
+@enduml
+
+
+---
+
+Slide 3 → “What Next” (Phased Implementation Roadmap)
+
+For roadmap, a C4 Deployment diagram is better, showing Phase 1 → Phase 2 → Phase 3.
+This way stakeholders see how it will scale.
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+LAYOUT_LEFT_RIGHT()
+
+Deployment_Node(bank, "Bank Infrastructure", "On-Prem + Cloud (OpenShift)") {
+
+  ' Phase 1: Pilot
+  Deployment_Node(phase1, "Phase 1: Pilot (Compliance Division)", "KYC + AML") {
+    Container(kyc, "KYC App", "Java/Angular", "Existing compliance workflows")
+    Container(aml, "AML App", "Python", "Transaction monitoring")
+    Container(plugin1, "CongniAiOps Plugin", "SDK/Library", "Abstract AI layer embedded in apps")
+  }
+
+  ' Phase 2: Scale
+  Deployment_Node(phase2, "Phase 2: Scale (Add Fraud, Other Apps)", "Compliance + Fraud") {
+    Container(fraud, "Fraud Detection App", "Java", "Fraud case investigation")
+    Container(plugin2, "CongniAiOps Plugin", "SDK/Library", "Extended AI layer")
+    Container(sharedRag, "Shared RAG Corpus", "Vector DB", "Policies, SOPs, past cases, media feeds")
+    Container(policy, "Central Policy Engine", "Service", "RBAC, DLP, audit enforcement")
+  }
+
+  ' Phase 3: Enterprise Rollout
+  Deployment_Node(phase3, "Phase 3: Enterprise Rollout", "Full Bank") {
+    Container(mcp, "Model Control Plane (MCP)", "Service", "Manages versions, rollout, rollback")
+    Container(fed, "Federated Agent Layer", "Service", "Coordinates multi-agent across apps")
+    Container(obs, "Observability & Audit", "Service", "Runtime metrics, compliance reporting")
+  }
+}
+
+' Relationships
+Rel(user, kyc, "Works with")
+Rel(user, aml, "Works with")
+Rel(user, fraud, "Works with")
+
+Rel(kyc, plugin1, "Delegates AI tasks")
+Rel(aml, plugin1, "Delegates AI tasks")
+Rel(fraud, plugin2, "Delegates AI tasks")
+
+Rel(plugin1, sharedRag, "Read/write embeddings")
+Rel(plugin2, sharedRag, "Read/write embeddings")
+Rel(sharedRag, policy, "Policy enforcement")
+
+Rel(mcp, plugin1, "Deploy/promote models")
+Rel(mcp, plugin2, "Deploy/promote models")
+Rel(fed, mcp, "Coordinate model/agents across apps")
+Rel(obs, fed, "Monitors KPIs, risks")
+@enduml
