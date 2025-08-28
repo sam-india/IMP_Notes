@@ -222,3 +222,113 @@ Rel(policy, ingest, "Govern ingestion")
 
 SHOW_LEGEND()
 @enduml
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+
+' ------------------
+' Actors
+' ------------------
+Person(user, "End User", "Prompts tasks in NL (risk/control workflows)")
+Person(sme, "Risk Analysts / Control Officers", "Label, correct, update policies")
+Person(mle, "MLE / Data Scientist", "Owns training/eval pipelines")
+
+' ------------------
+' CongniAiOps Runtime (Agentic AI)
+' ------------------
+System_Boundary(ai, "CongniAiOps Runtime (Agentic AI)") {
+  Container(promptUI, "Prompt Interface", "Chat/Command UI", "Accepts NL instructions")
+  Container(orchestrator, "LangGraph Orchestrator", "Graph-based planner", "Plans → selects tools/plugins → executes multi-step workflows")
+  Container(plugin, "AI Plugin Layer", "SDK/Library", "Abstract AI interface in each app")
+  Container(rag, "RAG Corpus", "Vector DB", "Policies, SOPs, past cases, frameworks")
+  Container(policy, "Governance Engine", "Service", "RBAC, DLP, audit guardrails")
+}
+
+System_Boundary(apps, "Enterprise Risk & Control Applications") {
+  Container(app1, "Risk Assessment App", "Java/Angular", "Market/Credit/Operational risk scoring")
+  Container(app2, "Internal Controls App", "Java", "SOX controls & audits")
+  Container(app3, "Regulatory Reporting App", "Python", "Generate & file reports")
+  Container(app4, "Audit Mgmt App", "Java/Angular", "Plan, track & close audits")
+  Container(app5, "Incident Tracking App", "Python", "Issues, corrective actions")
+}
+
+' ------------------
+' Training & Lifecycle (Continuous Learning)
+' ------------------
+System_Boundary(train, "Training Lifecycle") {
+  Container(intercept, "User Action Interceptor", "Middleware", "Captures app events (UI/API)")
+  Container(ftprep, "Training Data Builder", "Jobs", "Curates prompt/response traces + SME corrections")
+  Container(ft, "Fine-tuning / Adapters", "Jobs", "LoRA/Adapters for risk/control domains")
+  Container(eval, "Eval & Safety Gates", "Service", "Benchmarks, red-team, regression tests")
+  Container(reg, "Model Registry", "Service", "Versioned models")
+  Container(mcp, "MCP Promotion Controller", "Service", "Canary, A/B, rollback to orchestrator")
+}
+
+' ------------------
+' External Knowledge
+' ------------------
+Container(srcPolicies, "Policies & Risk Frameworks", "Docs/Repos", "Risk policies, control libraries, SOPs")
+Container(srcCases, "Audit & Risk Notes", "Case DB", "Historical findings (PII governed)")
+Container(srcEvents, "Event/API Logs", "Data Lake", "Tool calls, transactions, outcomes")
+Container(srcMedia, "Reg/Adverse Feeds", "Feeds", "Regulatory updates, alerts, sanctions lists")
+
+Container(ingest, "RAG Ingestion Pipeline", "Jobs", "Chunk → enrich → embed → index")
+ContainerDb(vecdb, "Vector DB", "DB", "Embeddings + metadata + citations")
+Container(obs, "Observability", "Service", "Dashboards: quality, latency, cost")
+
+' ------------------
+' Runtime Flow (Agentic loop)
+' ------------------
+Rel(user, promptUI, "Submits NL prompts")
+Rel(promptUI, orchestrator, "Send prompt")
+Rel(orchestrator, rag, "Retrieve context (RAG)")
+Rel(orchestrator, policy, "Check RBAC/DLP")
+Rel(orchestrator, plugin, "Select & invoke tool via LangGraph")
+
+Rel(plugin, app1, "Secure API calls")
+Rel(plugin, app2, "Secure API calls")
+Rel(plugin, app3, "Secure API calls")
+Rel(plugin, app4, "Secure API calls")
+Rel(plugin, app5, "Secure API calls")
+
+' ------------------
+' Training Flow (Intercepted actions → learning)
+' ------------------
+Rel(user, app1, "Logs in & performs tasks")
+Rel(user, app2, "Logs in & performs tasks")
+Rel(user, app3, "Logs in & performs tasks")
+Rel(user, app4, "Logs in & performs tasks")
+Rel(user, app5, "Logs in & performs tasks")
+
+Rel(app1, intercept, "Capture events")
+Rel(app2, intercept, "Capture events")
+Rel(app3, intercept, "Capture events")
+Rel(app4, intercept, "Capture events")
+Rel(app5, intercept, "Capture events")
+
+Rel(intercept, ftprep, "Convert to training data")
+Rel(sme, ftprep, "Review, correct labels")
+
+Rel(srcPolicies, ingest, "Docs → embeddings")
+Rel(srcCases, ingest, "Cases → embeddings")
+Rel(srcEvents, ingest, "Logs → embeddings")
+Rel(srcMedia, ingest, "Feeds → embeddings")
+
+Rel(ingest, vecdb, "Store embeddings")
+Rel(vecdb, rag, "Context retrieval")
+
+Rel(ftprep, ft, "Curated datasets")
+Rel(ft, eval, "Candidate models → test")
+Rel(eval, reg, "If pass, register")
+Rel(reg, mcp, "Push new version")
+Rel(mcp, orchestrator, "Deploy/rollback models at runtime")
+
+Rel(mle, ft, "Run FT/adapter jobs")
+Rel(mle, eval, "Define thresholds")
+Rel(obs, ftprep, "Feedback → retraining")
+Rel(policy, ftprep, "Mask PII")
+Rel(policy, ingest, "Guard ingestion")
+
+SHOW_LEGEND()
+@enduml
