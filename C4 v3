@@ -332,3 +332,91 @@ Rel(policy, ingest, "Guard ingestion")
 
 SHOW_LEGEND()
 @enduml
+
+
+
+
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_TOP_DOWN()
+
+' -------------------
+' Actors
+' -------------------
+Person(riskUser, "Risk Officer", "Uses Risk system manually or via NL prompts")
+Person(auditUser, "Auditor", "Uses Audit system manually or via NL prompts")
+Person(issueUser, "Issue Manager", "Uses Issue Mgmt system manually or via NL prompts")
+Person(manager, "Management", "Pulls insights across systems")
+
+' -------------------
+' Enterprise Applications (Box for all 3 apps)
+' -------------------
+System_Boundary(apps, "Enterprise Risk & Control Applications") {
+
+  ' ---- Risk App ----
+  System_Boundary(riskApp, "Risk Assessment System") {
+    Container(riskUI, "Risk App UI", "Web", "User interface for risk scoring")
+    Container(riskPlugin, "CongniAiOps Plugin", "SDK/Library", "LangGraph orchestration + prompt handling")
+    Container(riskModel, "Risk Domain Model", "LLM + Adapters", "Risk-specific AI model")
+    Container(riskAPI, "Risk APIs/DB", "Services", "Enterprise APIs & databases")
+  }
+
+  Rel(riskUser, riskUI, "Performs actions manually")
+  Rel(riskUser, riskPlugin, "Sends NL prompts")
+  Rel(riskUI, riskPlugin, "Intercept events → training")
+  Rel(riskPlugin, riskModel, "Execute task with context (via LangGraph)")
+  Rel(riskModel, riskAPI, "Call Risk APIs / fetch data")
+  Rel(riskModel, riskPlugin, "Return structured results")
+  Rel(riskPlugin, riskUI, "Show response in NL")
+
+  ' ---- Audit App ----
+  System_Boundary(auditApp, "Internal Audit System") {
+    Container(auditUI, "Audit App UI", "Web", "Audit workflows")
+    Container(auditPlugin, "CongniAiOps Plugin", "SDK/Library", "LangGraph orchestration + prompt handling")
+    Container(auditModel, "Audit Domain Model", "LLM + Adapters", "Audit-specific AI model")
+    Container(auditAPI, "Audit APIs/DB", "Services", "Enterprise APIs & audit records")
+  }
+
+  Rel(auditUser, auditUI, "Performs actions manually")
+  Rel(auditUser, auditPlugin, "Sends NL prompts")
+  Rel(auditUI, auditPlugin, "Intercept events → training")
+  Rel(auditPlugin, auditModel, "Execute task with context (via LangGraph)")
+  Rel(auditModel, auditAPI, "Call Audit APIs / fetch data")
+  Rel(auditModel, auditPlugin, "Return structured results")
+  Rel(auditPlugin, auditUI, "Show response in NL")
+
+  ' ---- Issue Mgmt App ----
+  System_Boundary(issueApp, "Issue Mgmt System") {
+    Container(issueUI, "Issue App UI", "Web", "Issue logging & corrective actions")
+    Container(issuePlugin, "CongniAiOps Plugin", "SDK/Library", "LangGraph orchestration + prompt handling")
+    Container(issueModel, "Issue Domain Model", "LLM + Adapters", "Issue-specific AI model")
+    Container(issueAPI, "Issue APIs/DB", "Services", "Enterprise APIs & issue database")
+  }
+
+  Rel(issueUser, issueUI, "Performs actions manually")
+  Rel(issueUser, issuePlugin, "Sends NL prompts")
+  Rel(issueUI, issuePlugin, "Intercept events → training")
+  Rel(issuePlugin, issueModel, "Execute task with context (via LangGraph)")
+  Rel(issueModel, issueAPI, "Call Issue APIs / fetch data")
+  Rel(issueModel, issuePlugin, "Return structured results")
+  Rel(issuePlugin, issueUI, "Show response in NL")
+}
+
+' -------------------
+' Federated Layer
+' -------------------
+System_Boundary(federated, "Federated CongniAiOps Layer") {
+  Container(promptUI, "Federated Prompt UI", "Chat/Command UI", "Cross-system natural language query")
+  Container(fedOrch, "Federated Orchestrator", "LangGraph", "Coordinates multi-system workflows")
+  Container(fedRAG, "Federated RAG Corpus", "Vector DB", "Policies, SOPs, cross-domain knowledge")
+}
+
+Rel(manager, promptUI, "Asks cross-system questions")
+Rel(promptUI, fedOrch, "Send NL query")
+Rel(fedOrch, fedRAG, "Retrieve multi-domain context")
+Rel(fedOrch, riskPlugin, "Query risk insights")
+Rel(fedOrch, auditPlugin, "Query audit insights")
+Rel(fedOrch, issuePlugin, "Query issue insights")
+
+@enduml
