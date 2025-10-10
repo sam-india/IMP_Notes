@@ -1,0 +1,352 @@
+the use cases I ahve already given as input, i also talked about the insight on productivity and
+other things which are not mentioned here at all
+Here’s a comprehensive FAQ and use case summary integrating all your points—including
+RBAC/ABAC, productivity insights, and the external integration scenario.
+1. What is RBAC/ABAC and how is it implemented in AAM?
+2. How does the agentic platform generate operational/productivity insights?
+3. How do external applications and integrations (JIRA, PTS, Marketplace, etc.) work with
+Agentic AI?
+the RBAC or ABAC FAQ is missed
+Expanded FAQs
+RBAC (Role-Based Access Control): Manifests specify every action’s allowed roles (e.g.,
+AUDIT_MANAGER, FRAUD_ANALYST), enabling fine-grained, team/org-wide permissioning.
+ABAC (Attribute-Based Access Control): Each workflow can enforce row-level, attributederived rules based on context (dept, site, business unit, risk_category, etc.), supporting
+even more granular restrictions.
+These controls are not duplicated per use case: they’re managed in central Security policies
+where each action_id gets its own RBAC/ABAC block.
+If a use case requires fundamentally different governance, security, or compliance, a new
+action_id with distinct RBAC/ABAC rules is created (e.g., international audits having stricter
+entitlements).
+Every event (button click, API call, action execution, approval, etc.) is logged with full
+timestamps and user-context.
+This event data serves as training/analytics data for productivity analysis: measuring
+analyst time-to-resolution, workflow bottlenecks, manual vs. automated effort, and user
+adoption.
+Management can use dashboards to track who is most/least productive, which processes
+are most/least efficient, and where to deploy further automation for ROI improvements.
+Agentic AAM supports mapping and automation of workflows targeting external
+applications.
+SMEs can use a training UI or configuration flow to define how a set of API calls (across
+JIRA, Marketplace, PTS, etc.) can be clubbed into atomic agentic tasks, regardless of
+4. What is the difference between enabling/disabling actions versus entire agentic
+automation?
+5. How can I disable all use cases for a certain workflow/action family?
+6. Can the platform differentiate truly distinct workflows from mere variations?
+7. How do I control concurrency and performance at scale?
+whether those platforms are internally managed.
+The manifest lists allowed external domains, supported integrations, and security rules for
+external data handling.
+Any granular workflow/action can be instantly disabled for agentic execution via an enable
+flag (enabled: false). Humans can still execute natively unless blocked at the system level.
+The root manifest (AAM_Root.yaml) provides a switch to disable all automation platform-wide
+(e.g., in case of catastrophic failure, regulatory enforce, or DDoS).
+Parent/child hierarchy for actions lets SMEs bulk-disable (e.g., all “approve audit” flows) by
+parent action, category, or tag in a single edit.
+Yes. Fully distinct use cases/flows get their own action_ids and security rules (e.g., local vs.
+international approval).
+Variations (such as standard vs. expedite approval) are grouped under use case/action_id,
+sharing governance and security.
+The root manifest includes controls for the max allowed concurrent users and flows, plus
+system load/fallback settings and emergency notification props.
+Use Cases Discussed
+Audit Approval (Approve Audit)
+Multiple UCs for local, international, exception, and expedite flows, each agentically
+orchestrated with RBAC/ABAC, enable/disabling possible at parent and child levels.
+Risk Escalation
+Threshold and manual escalation workflows for risk events, supporting compliance,
+supervisor approval, analytics, and agentic enable/disable.
+Fraud Detection
+ML-detected, analyst-flagged, and customer-reported fraud workflows with role/attributecontrolled permissions, AI escalation, and productivity/event logging.
+External System Integration (JIRA/PTS/Marketplace)
+SMEs and admins can configure agentic workflows spanning multiple external APIs,
+documenting clubbed multi-system automation directly in the manifest for compliance,
+auditing, and further training.
+Operational and Productivity Insights
+All user/system events generate actionable training and analytics data that serve both
+business reporting and model improvement. Dashboards can show analyst time-to-
+Let me know if you want any of these answers expanded with real YAML/flow examples,
+diagrams, or formatted for slides or client documentation!
+resolution, productivity, slow processes, adoption rate, and efficiency improvements from
+automation.
+
+## ** Agentic Action Manifest.yaml **
+## **AAM_Root.yaml**
+
+system_enabled: true                     # Set to false to instantly disable the entire agent and all flows
+emergency_disable_reason: ""             # Optionally specify the reason for shutdown
+max_global_concurrent_flows: 500         # Max total running agentic flows at once
+max_concurrent_users: 1000               # Limit for simultaneous active end users
+max_model_cpu_percent: 75                # Model infra safety margin
+fallback_mode: manual_only               # Fallback operational mode if AI is degraded
+alert_on_catastrophe: true               # Should emergency alerts fire on failure?
+last_emergency_disable: 2025-10-08T02:10:23Z
+allowed_domains:
+  - audit
+  - risk
+  - fraud
+  - ops
+global_tags:
+  - prod
+  - external_integrations_allowed
+system_contact: ai-ops-team@yourcompany.com
+audit_retention_days: 365
+maintenance_window:
+  enabled: false
+  start_time: ""
+  end_time: ""
+  message: ""
+brand_name: "CogniAiOps"
+root_manifest_version: "1.0.0"
+
+## **AAM_Workflows.yaml**
+
+workflows:
+  - parent_action: "approve_audit"
+    enabled: true
+    category: "audit_approval"
+    description: "Unified agentic workflow for audit approval, with contextual variations."
+    child_actions:
+      - action_id: "APPROVAL_EVENT_FLOW_AUDIT"
+        enabled: true
+        domain: "audit"
+        task: "approve_audit_issue"
+        description: "Main audit approval workflow supporting standard, expedited, international, and exception scenarios."
+        ui_event: "approveButton.click"
+        required_fields: [issue_id, reviewer_name]
+        variations:
+          - variation_id: "standard"
+            label: "Standard Approval"
+            required_fields: [approval_comment]
+            applicability: "Default, all audits"
+          - variation_id: "expedite"
+            label: "Expedited Approval"
+            required_fields: [approval_comment, expedite_reason, supervisor_override]
+            applicability: "Urgent flag set by reviewer"
+          - variation_id: "international"
+            label: "International Approval"
+            required_fields: [approval_comment, country_code, regulatory_code]
+            applicability: "Audit entity is non-domestic"
+          - variation_id: "exception"
+            label: "Exception Approval"
+            required_fields: [approval_comment, exception_type, supervisor_override]
+            applicability: "Exception flagged by supervisor"
+        workflow_steps:
+          - step: "Load audit data"
+            api: "GET /audit/records/{issue_id}"
+          - step: "Check reviewer entitlement"
+            api: "GET /acl/entitlements/{reviewer_name}/audit"
+          - step: "Perform approval"
+            api: "POST /audit/issues/approve"
+        examples:
+          - "Approve audit 12345 (standard)"
+          - "Approve audit 12345 (expedite)"
+          - "Approve audit INT-22 (international)"
+          - "Approve audit 3344 (exception)"
+
+  # -----------------------------------------
+  # Risk Escalation Workflow
+  # -----------------------------------------
+
+  - parent_action: "escalate_risk"
+    enabled: true
+    category: "risk_escalation"
+    description: "Unified agentic workflow for risk escalation, with contextual automation/manual logic."
+    child_actions:
+      - action_id: "ESCALATION_EVENT_FLOW_RISK"
+        enabled: true
+        domain: "risk"
+        task: "escalate_risk_event"
+        description: "Risk escalation workflow, handling both system-detected and analyst-triggered scenarios."
+        ui_event: "escalateButton.click"
+        required_fields: [risk_id]
+        variations:
+          - variation_id: "auto"
+            label: "Automatic Escalation"
+            required_fields: [risk_score, breach_threshold]
+            applicability: "System detects threshold breach"
+          - variation_id: "manual"
+            label: "Manual Escalation"
+            required_fields: [escalation_reason, urgency_level]
+            applicability: "Analyst triggers escalation"
+        workflow_steps:
+          - step: "Load risk event"
+            api: "GET /risk/events/{risk_id}"
+          - step: "Escalate"
+            api: "POST /risk/escalate"
+        examples:
+          - "System auto-escalates RISK-9001"
+          - "Analyst manually escalates RISK-2025-7 for review"
+
+  # -----------------------------------------
+  # Fraud Detection Workflow
+  # -----------------------------------------
+
+  - parent_action: "detect_fraud"
+    enabled: true
+    category: "fraud_detection"
+    description: "Unified agentic workflow for fraud detection and case creation."
+    child_actions:
+      - action_id: "DETECTION_EVENT_FLOW_FRAUD"
+        enabled: true
+        domain: "fraud"
+        task: "flag_fraud_case"
+        description: "Fraud case workflow for both AI/ML detected and manually flagged scenarios."
+        ui_event: "flagFraudButton.click"
+        required_fields: [transaction_id]
+        variations:
+          - variation_id: "ai_detected"
+            label: "AI Detected Fraud"
+            required_fields: [fraud_score, model_id]
+            applicability: "AI model flags transaction"
+          - variation_id: "manual"
+            label: "Manual/Customer Flagged Fraud"
+            required_fields: [customer_report, user_id]
+            applicability: "Analyst or customer flags fraud"
+        workflow_steps:
+          - step: "Get transaction details"
+            api: "GET /transactions/{transaction_id}"
+          - step: "Create fraud case"
+            api: "POST /fraud/cases/create"
+        examples:
+          - "AI flags txn 1492 as fraud"
+          - "Customer reports fraud on txn 8728"
+
+### **AAM_Security.yaml**
+security:
+  - action_id: "APPROVAL_EVENT_FLOW_AUDIT_UC1"
+    roles_allowed: [AUDIT_MANAGER, AUDIT_SUPERVISOR, SENIOR_AUDITOR]
+    variation_roles:
+      expedite_approval:
+        additional_roles: [CFO, AUDIT_DIRECTOR]
+        requires_dual_approval: true
+    abac_filters:
+      department: "{user.department}"
+      business_unit: "{user.authorized_units}"
+      site_code: "{user.primary_site}"
+    context_rules:
+      status_gate: "audit_status in ['Submitted', 'Under Review']"
+      value_threshold: "audit_value <= user.approval_limit"
+      conflict_of_interest: "audit_originator != user.employee_id"
+    temporal:
+      allowed_days: ["MON", "TUE", "WED", "THU", "FRI"]
+      blackout_periods: ["month_end_close"]
+    approval_requirements:
+      standard_approval: { single_approval: true, supervisor_notification: true }
+      expedite_approval: { dual_approval: true, supervisor_approval: true }
+  - action_id: "ESCALATION_EVENT_FLOW_RISK_UC1"
+    roles_allowed: [RISK_ANALYST, RISK_MANAGER, RISK_OFFICER]
+    abac_filters:
+      risk_category: "{user.authorized_risk_types}"
+      portfolio_id: "{user.managed_portfolios}"
+    context_rules:
+      escalation_threshold: "risk_score >= user.escalation_authority_level"
+    approval_requirements:
+      threshold_breach: { auto_approved: true }
+      manual_escalation: { manager_approval: true, documentation_required: true }
+  - action_id: "DETECTION_EVENT_FLOW_FRAUD_UC1"
+    roles_allowed: [FRAUD_ANALYST, FRAUD_MANAGER]
+    abac_filters:
+      customer_segment: "{user.authorized_segments}"
+      case_value_range: "{user.min_case_value}-{user.max_case_value}"
+    data_privacy:
+      mask_fields: [customer_ssn, account_number, customer_email]
+
+### **AAM_Logging.yaml**
+logging:
+  - action_id: "APPROVAL_EVENT_FLOW_AUDIT_UC1"
+    log_fields: [user_id, timestamp, action_id, request_body, response_status]
+    retention_days: 180
+    notify_on: ["validation_failure", "authorization_failure"]
+    mask_fields: [ssn, customer_email]
+  - action_id: "ESCALATION_EVENT_FLOW_RISK_UC1"
+    log_fields: [risk_id, user_id, escalation_type, outcome]
+    retention_days: 365
+  - action_id: "DETECTION_EVENT_FLOW_FRAUD_UC1"
+    log_fields: [transaction_id, fraud_score, flagged_by, mask_fields]
+    retention_days: 730
+    mask_fields: [customer_ssn, account_number, email]
+    notify_on_high_value: 50000
+
+### **AAM_Requests.yaml**
+requests:
+  - action_id: "APPROVAL_EVENT_FLOW_AUDIT_UC1"
+    api_requests:
+      standard_approval:
+        method: "POST"
+        endpoint: "/audit/issues/approve"
+        body:
+          issue_id: "{issue_id}"
+          approval_comment: "{approval_comment}"
+          reviewer_name: "{reviewer_name}"
+      expedite_approval:
+        method: "POST"
+        endpoint: "/audit/issues/approve"
+        body:
+          issue_id: "{issue_id}"
+          approval_comment: "{approval_comment}"
+          expedite_justification: "{expedite_justification}"
+    response_patterns:
+      success: { status_code: [200, 201], body_status: "approved" }
+      validation_failure: { status_code: 400, error_code: "VALIDATION_FAILED" }
+      authorization_failure: { status_code: 403, error_code: "INSUFFICIENT_PERMISSIONS" }
+  - action_id: "ESCALATION_EVENT_FLOW_RISK_UC1"
+    api_requests:
+      threshold_breach:
+        method: "POST"
+        endpoint: "/risk/escalate"
+        body:
+          risk_id: "{risk_id}"
+          escalation_type: "automatic_threshold"
+      manual_escalation:
+        method: "POST"
+        endpoint: "/risk/escalate"
+        body:
+          risk_id: "{risk_id}"
+          escalation_type: "manual_analyst"
+    response_patterns:
+      success: { status_code: 200 }
+      failure: { status_code: 400 }
+  - action_id: "DETECTION_EVENT_FLOW_FRAUD_UC1"
+    api_requests:
+      ai_detected_fraud:
+        method: "POST"
+        endpoint: "/fraud/cases/create"
+        body:
+          transaction_id: "{transaction_id}"
+          fraud_score: "{fraud_score}"
+      customer_reported:
+        method: "POST"
+        endpoint: "/fraud/cases/create"
+        body:
+          transaction_id: "{transaction_id}"
+          customer_report: "{customer_report}"
+    response_patterns:
+      success: { status_code: 201 }
+      failure: { status_code: 400 }
+
+### **AAM_Events.yaml**
+events:
+  - action_id: "APPROVAL_EVENT_FLOW_AUDIT_UC1"
+    ui_events:
+      - trigger: "approveButton.click"
+        page_context: "audit_review_page"
+        required_fields: [approval_comment, reviewer_name]
+      - trigger: "expediteApproveButton.click"
+        page_context: "audit_review_page"
+        required_fields: [approval_comment, reviewer_name, expedite_justification, supervisor_approval_code]
+  - action_id: "ESCALATION_EVENT_FLOW_RISK_UC1"
+    ui_events:
+      - trigger: "autoEscalateAlert.display"
+        page_context: "risk_dashboard"
+        required_fields: [risk_id, risk_score]
+      - trigger: "escalateButton.click"
+        page_context: "risk_dashboard"
+        required_fields: [risk_id, escalation_reason, urgency_level]
+  - action_id: "DETECTION_EVENT_FLOW_FRAUD_UC1"
+    ui_events:
+      - trigger: "aiAlertBanner.click"
+        page_context: "fraud_monitor"
+        required_fields: [transaction_id, fraud_score, detection_model]
+      - trigger: "createFraudCase.click"
+        page_context: "fraud_monitor"
+        required_fields: [transaction_id, customer_report, customer_id]
