@@ -1,0 +1,47 @@
+Hi All,
+
+My Name is Sajal Samaiya, I am part of Enterprise Risk domain and Today I am excited to introduce **CognitiveAIOps**, a foundational AI assistant built to transform how CITI automates complex enterprise workflows, gains business insights, and accelerates AI adoption at scale.
+
+Slide 1
+### What problem are we addressing?  
+Today, most enterprise applications are non-AI native and fragmented —Risk, Audit, Issue Management, Fraud systems all run isolated manual or semi-automated workflows.  
+- AI adoption is slowed by one-off custom models.  
+- Compliance demands and costs are rising.  
+- Cross-domain insights and orchestration are complex or impossible with siloed AI.
+
+### The CognitiveAIOps Solution  
+We provide a **generic, reusable AI layer** that integrates natively with existing enterprise systems, rather than bolt-on tools. This AI layer enables:
+
+- End-to-end task execution through natural language and API orchestration.
+- Cross-application workflows and insights through a federated architecture.
+- Scalable AI adoption with policy enforcement, RBAC, audit, and control baked in.
+
+### Business Imperatives Addressed  
+- **Regulatory pressure:** Ensures audit trails, compliance, and reduces manual errors.  
+- **Enterprise AI maturity:** Uses industry-ready orchestration tools for practical, reliable AI.  
+- **Enterprise-readiness:** Utilizes APIs, microservices, and controls already established at CITI for seamless integration.
+
+### Value Proposition  
+- Frees up 30-40% analyst capacity via automation and workflow acceleration  
+- Drives annual productivity gains worth $35-40M per major line of business  
+- Reduces regulatory exposure and linear cost growth  
+- Forges a strategic multi-domain AI platform, future-proofing CITI’s operations with scalable, federated intelligence
+
+
+### How does it work architecturally?  
+Each application—Risk, Audit, Issue Management—runs its own specialized AI agent trained on domain-specific workflows, policies, and data.  
+The **federated orchestration layer**, powered by LangGraph, coordinates these agents:  
+- It breaks down complex queries into sub-tasks  
+- Queries multiple agents to aggregate multi-domain insights  
+- Enforces unified governance while respecting local data policies  
+- Provides an AI fabric that is adaptive, fault-tolerant, and explainable
+ 
+
+### In Summary  
+CognitiveAIOps isn’t just automation—it’s your enterprise’s AI brain, seamlessly integrating workflows, orchestrating across systems, and adapting dynamically to evolving business and compliance needs.  
+It’s designed to make CITI more intelligent, efficient, and competitive.
+
+I look forward to demonstrating a live federated workflow and showing the insights dashboards powered by this unique agentic platform.
+
+
+ 
