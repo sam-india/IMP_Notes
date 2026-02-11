@@ -1,0 +1,166 @@
+To implement this correctly, we will create a clean, three-layered architecture: the DTO (the data container), the Registry (the mapping instructions), and the Execution Engine (the logic).
+1. The Data Container (DTO)
+This is the object that will actually hold your data. For the TableA example, we use a Java record because it provides the required constructor and getters automatically.
+package com.example.reports.dto;
+
+public record TableADto(
+    String colA1, 
+    String colA2, 
+    String colA3, 
+    Integer colA10
+) {}
+
+2. The Mapping Registry (Metadata)
+This is the "dummy" entity that stores your SQL instructions. You don't need to create a table for this in your DB; it’s purely for Hibernate's configuration.
+package com.example.reports.entity;
+
+import com.example.reports.dto.TableADto;
+import jakarta.persistence.*;
+
+@Entity
+@SqlResultSetMappings({
+    @SqlResultSetMapping(
+        name = "TableAMapping",
+        classes = @ConstructorResult(
+            targetClass = TableADto.class,
+            columns = {
+                @ColumnResult(name = "colA1", type = String.class),
+                @ColumnResult(name = "colA2", type = String.class),
+                @ColumnResult(name = "colA3", type = String.class),
+                @ColumnResult(name = "colA10", type = Integer.class)
+            }
+        )
+    )
+    // You can add TableBMapping, TableCMapping, etc., here in the same list
+})
+public class SqlMappingRegistry {
+    @Id
+    private Long id; // Not used, strictly for JPA compliance
+}
+
+3. The Execution Engine (Service)
+This is the generic service that takes any SQL, a mapping name, and parameters to return your list of DTOs.
+package com.example.reports.service;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class QueryExecutionEngine {
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Transactional(readOnly = true)
+    @SuppressWarnings("unchecked")
+    public <T> List<T> executeReport(String sql, String mappingName, Map<String, Object> params) {
+        // 1. Create native query with the mapping 'contract'
+        Query query = entityManager.createNativeQuery(sql, mappingName);
+
+        // 2. Bind dynamic parameters securely
+        if (params != null) {
+            params.forEach(query::setParameter);
+        }
+
+        // 3. Execute and return mapped DTOs
+        return query.getResultList();
+    }
+}
+
+4. How to Use It (The Controller/Runner)
+Here is how you would trigger the execution for TableA.
+@RestController
+@RequestMapping("/api/reports")
+public class ReportController {
+
+    @Autowired
+    private QueryExecutionEngine queryEngine;
+
+    @GetMapping("/table-a")
+    public List<TableADto> getTableAReport() {
+        // This SQL would typically come from your metadata table
+        String sql = "SELECT colA1, colA2, colA3, colA10 " +
+                     "FROM tableA " +
+                     "WHERE colA1 = :val1 AND colA10 = :val10";
+
+        // Dynamic parameters for the WHERE condition
+        Map<String, Object> params = Map.of(
+            "val1", "A",
+            "val10", 100
+        );
+
+        // Execute using the registry key "TableAMapping"
+        return queryEngine.executeReport(sql, "TableAMapping", params);
+    }
+}
+
+Key Takeaways for Your Implementation
+ * Order Matters: The order of @ColumnResult in your registry must match the order of fields in your DTO constructor (TableADto).
+ * Case Sensitivity: Ensure the name in @ColumnResult matches the actual column names or aliases in your SQL string exactly.
+ * Large Datasets: Notice the @Transactional(readOnly = true). This tells Hibernate not to track these objects for changes, which keeps your memory usage very low even when fetching millions of rows.
+Would you like me to create the SQL table structure for your Metadata table so you can see how to link the SQL strings to these Mapping names dynamically?
+
+
+To handle dynamic filters (the WHERE clause) like an expert, you need to solve two problems: Building the SQL string dynamically and Binding the parameters securely to prevent SQL injection.
+Since your SQL is stored as a "base" string, you should use a StringBuilder to append conditions based on what the user selects in the UI.
+1. The Dynamic Query Builder Logic
+You can create a utility method that takes your base SQL and appends the WHERE conditions and parameters in one go.
+public List<TableADto> getFilteredReport(Map<String, Object> uiFilters) {
+    // 1. Your Base SQL from Metadata
+    StringBuilder sql = new StringBuilder("SELECT colA1, colA2, colA3, colA10 FROM tableA WHERE 1=1");
+    Map<String, Object> queryParams = new HashMap<>();
+
+    // 2. Dynamically append conditions based on UI selection
+    if (uiFilters.containsKey("colA1")) {
+        sql.append(" AND colA1 = :val1");
+        queryParams.put("val1", uiFilters.get("colA1"));
+    }
+
+    if (uiFilters.containsKey("colA10")) {
+        sql.append(" AND colA10 = :val10");
+        queryParams.put("val10", uiFilters.get("colA10"));
+    }
+
+    // 3. Pass to our Generic Engine
+    return queryEngine.executeReport(sql.toString(), "TableAMapping", queryParams);
+}
+
+2. Handling Complex Logic (AND/OR and Operators)
+If your UI allows users to choose operators like !=, >, or IN, you can make the loop more generic.
+// Logic for a more robust filter engine
+for (FilterCriteria criteria : userSelectedCriteria) {
+    String paramName = "param_" + criteria.getFieldName();
+    
+    sql.append(" AND ")
+       .append(criteria.getFieldName()) // Field Name (e.g., colA1)
+       .append(" ")
+       .append(criteria.getOperator())  // Operator (e.g., != or IN)
+       .append(" :")
+       .append(paramName);
+
+    queryParams.put(paramName, criteria.getValue());
+}
+
+3. Why WHERE 1=1 is a Pro-Tip
+You'll notice I started the SQL with WHERE 1=1.
+ * The Benefit: This is a standard trick for dynamic queries. It allows you to always append every subsequent condition with AND ... without checking if it's the first condition or not. 1=1 is always true, so it doesn't affect performance, but it makes your StringBuilder logic much cleaner.
+4. Handling "IN" Clauses
+The IN clause is slightly different because it expects a collection. Hibernate handles this automatically if you pass a List as the value.
+// If user selects multiple values for colA1
+List<String> selectedValues = Arrays.asList("A", "B", "C");
+
+sql.append(" AND colA1 IN (:valList)");
+queryParams.put("valList", selectedValues); 
+// Hibernate expands this to ( 'A', 'B', 'C' ) automatically
+
+Summary of Workflow
+ * UI: User selects "colA1 equals A".
+ * Service: Appends AND colA1 = :val1 to the SQL and puts "val1" -> "A" in the Map.
+ * Engine: Takes the final SQL and Map, executes createNativeQuery, and binds the parameters.
+ * Database: Receives a safe, parameterized query that it can optimize and cache.
+Would you like me to show you how to implement a "Search Request" DTO that makes passing these filters from your Frontend to Backend even easier?
