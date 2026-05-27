@@ -1,0 +1,259 @@
+# Workflow Scheduling Data Model Design
+
+## Problem Statement
+
+There is a requirement to initiate workflows based on configurable frequencies such as monthly or quarterly.
+
+Requirements:
+
+- Multiple workflow types exist
+- Each workflow can run monthly or quarterly
+- Different workflows can have different execution months inside a quarter
+- Workflows apply to multiple capabilities (SDLC, Data & Reporting, Security, etc.)
+- New workflows should ideally require only data configuration and not code changes
+
+The key principle is:
+
+**Do not hardcode quarter logic in application code. Store it as metadata.**
+
+---
+
+## Proposed Data Model
+
+### 1. Capability Reference Table
+
+Stores capability master data.
+
+```sql
+CAPABILITY
+------------
+capability_id
+capability_name
+
+1 | SDLC
+2 | Data & Reporting
+3 | Security
+```
+
+---
+
+### 2. Workflow Type Table
+
+Stores workflow definitions.
+
+```sql
+WORKFLOW_TYPE
+-------------------
+workflow_type_id
+workflow_name
+frequency_type
+
+1 | Quarterly Review | QUARTERLY
+2 | Monthly Review | MONTHLY
+3 | Compliance Audit | QUARTERLY
+```
+
+Possible values of frequency type:
+
+```text
+MONTHLY
+QUARTERLY
+YEARLY
+```
+
+---
+
+### 3. Workflow Schedule Configuration Table
+
+Stores scheduling metadata.
+
+```sql
+WORKFLOW_SCHEDULE_CONFIG
+-------------------------------------------
+config_id
+workflow_type_id
+capability_id
+quarter_number
+execution_month
+execution_day
+is_active
+```
+
+Example:
+
+| config_id | workflow_type_id | capability_id | quarter | execution_month |
+|------------|------------------|---------------|----------|-----------------|
+| 1 | 1 | 1 | Q1 | Jan |
+| 2 | 1 | 1 | Q1 | Feb |
+| 3 | 1 | 1 | Q1 | Mar |
+| 4 | 2 | 2 | Q1 | Mar |
+| 5 | 2 | 2 | Q2 | Apr |
+
+Meaning:
+
+Workflow 1 (Quarterly Review for SDLC)
+
+Q1 → Jan, Feb, Mar  
+Q2 → Apr, May, Jun
+
+Workflow 2 (Compliance Audit for Data & Reporting)
+
+Q1 → Mar  
+Q2 → Apr
+
+---
+
+## Better Normalized Design
+
+Instead of storing month names, store numeric values.
+
+```sql
+WORKFLOW_SCHEDULE_CONFIG
+--------------------------
+config_id
+workflow_type_id
+capability_id
+frequency_type
+execution_month_number
+execution_day
+```
+
+Example:
+
+```text
+1 | 1 | 1 | QUARTERLY | 1
+2 | 1 | 1 | QUARTERLY | 2
+3 | 1 | 1 | QUARTERLY | 3
+4 | 2 | 2 | QUARTERLY | 3
+5 | 2 | 2 | QUARTERLY | 4
+```
+
+Month mapping:
+
+```text
+1 = January
+2 = February
+3 = March
+...
+12 = December
+```
+
+Advantages:
+
+- Avoids string comparison
+- Easier sorting
+- Better query performance
+- Reduced storage
+
+---
+
+## Runtime Workflow Generation Logic
+
+Suppose:
+
+```text
+Current month = March
+```
+
+Query:
+
+```sql
+SELECT
+    c.capability_name,
+    w.workflow_name
+FROM WORKFLOW_SCHEDULE_CONFIG sc
+JOIN CAPABILITY c
+ON c.capability_id=sc.capability_id
+JOIN WORKFLOW_TYPE w
+ON w.workflow_type_id=sc.workflow_type_id
+WHERE sc.execution_month_number=3
+AND sc.is_active='Y';
+```
+
+Expected Result:
+
+```text
+SDLC → Quarterly Review
+Data & Reporting → Compliance Audit
+```
+
+The scheduler then initiates workflows.
+
+---
+
+## Java Implementation Example
+
+```java
+int currentMonth = LocalDate.now().getMonthValue();
+
+List<WorkflowConfig> configs =
+        workflowRepo.findByMonth(currentMonth);
+
+configs.stream()
+       .forEach(config -> {
+
+            workflowService.initiateWorkflow(
+                    config.getWorkflowTypeId(),
+                    config.getCapabilityId()
+            );
+
+       });
+```
+
+---
+
+## Why This Design Works
+
+Advantages:
+
+- No code change for new workflow types
+- No hardcoded quarter logic
+- Different workflow frequencies supported
+- Different month patterns per capability supported
+- Easy enable/disable of schedules
+- Easily extendable
+
+---
+
+## Future Enhancement: CRON Based Scheduling
+
+If business rules become more dynamic, replace month configuration with CRON expressions.
+
+```sql
+WORKFLOW_SCHEDULE_CONFIG
+--------------------------------
+config_id
+workflow_type_id
+capability_id
+cron_expression
+active_flag
+```
+
+Examples:
+
+```text
+0 0 1 JAN,APR,JUL,OCT *
+```
+
+or
+
+```text
+0 0 1 MAR,APR *
+```
+
+Benefits:
+
+- Fully configurable scheduling
+- Supports complex schedules
+- Minimal code changes
+
+---
+
+## Recommended Enterprise Design
+
+Capability + WorkflowType + WorkflowScheduleConfig
+
+with:
+
+- Month-based configuration initially
+- CRON support for future scalability
