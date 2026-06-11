@@ -1,0 +1,226 @@
+These two documents are what I would actually put into your repository.
+The first is your implementation roadmap. The second is the instruction set that Devin should follow repeatedly.
+File 1: AI_AUTOMATION_ROADMAP.md
+:::writing{variant="document" id="58142"}
+AI Automation Roadmap
+Objective
+Generate maintainable BDD automation from manual QA test cases while maximizing reuse of the existing automation framework and minimizing locator maintenance.
+Phase 1 - Framework Discovery
+Goal
+Create a catalog of all existing automation capabilities.
+Inputs
+Automation Framework Repository
+Existing Step Definitions
+Existing Business APIs
+Existing Assertions
+Deliverables
+framework-capabilities.md
+Example:
+Authentication
+login()
+logout()
+Employee Search
+searchEmployee()
+searchByName()
+resetSearch()
+Approval
+approveRequest()
+rejectRequest()
+Success Criteria
+Existing capabilities are documented.
+Duplicate APIs are identified.
+Reusable APIs are identified.
+Phase 2 - UI Discovery
+Goal
+Build a knowledge base of the Angular application.
+Inputs
+Angular Repository
+Screenshots
+Existing Automation Artifacts
+Deliverables
+ui-knowledge-base.md
+For each page:
+Page Name
+Business Purpose
+Controls
+Navigation Paths
+Labels
+Success Criteria
+Screens are documented.
+User actions are identified.
+UI controls are mapped.
+Phase 3 - Locator Strategy
+Goal
+Centralize locator management.
+Deliverables
+locator.yaml
+locator-strategy.md
+Priority:
+data-testid
+id
+formcontrolname
+name
+aria-label
+visible text
+xpath
+Never use:
+Absolute XPath
+Index-based XPath
+ng-star classes
+Auto-generated IDs
+Success Criteria
+No hardcoded locators in Java.
+All locators managed through locator.yaml.
+Phase 4 - Automation Reuse Analysis
+Goal
+Prevent duplicate automation generation.
+Deliverables
+automation-reuse-catalog.md
+For each business capability:
+Existing API
+Existing Step Definition
+Existing Assertion
+Success Criteria
+Reusable assets are cataloged.
+Duplication opportunities identified.
+Phase 5 - Manual Test Analysis
+Goal
+Map manual test cases to existing automation assets.
+Inputs
+Manual Test Cases
+framework-capabilities.md
+automation-reuse-catalog.md
+ui-knowledge-base.md
+Deliverables
+reuse-plan.md
+For each manual test:
+Existing APIs to reuse
+Existing Steps to reuse
+Missing capabilities
+Success Criteria
+Reuse-first approach established.
+Gaps identified before coding.
+Phase 6 - Automation Generation
+Goal
+Generate automation using existing framework capabilities.
+Rules
+Reuse existing APIs first.
+Reuse existing Step Definitions first.
+Reuse existing Assertions first.
+Create new APIs only if no capability exists.
+Never generate direct Selenium code.
+Never generate hardcoded locators.
+Deliverables
+Feature File
+Step Definitions
+New Business APIs (if required)
+locator.yaml updates (if required)
+Phase 7 - Self-Healing Locator Framework
+Goal
+Reduce maintenance when UI changes.
+Approach
+locator.yaml supports:
+Primary locator
+Fallback locator(s)
+Framework attempts:
+Primary → Fallback1 → Fallback2 → Fallback3
+Future Enhancement
+AI-assisted locator healing:
+Capture DOM
+Capture Screenshot
+Identify replacement locator
+Update locator.yaml
+Success Criteria
+UI changes do not require test rewrites.
+Most locator failures are automatically recovered. :::
+File 2: DEVIN_AUTOMATION_INSTRUCTIONS.md
+Writing
+Devin Automation Instructions
+Context
+This project uses:
+BDD Feature Files → Step Definitions → Business Action APIs → Internal Automation Framework → Locator Repository → Selenium
+You must follow this architecture.
+Mandatory Rules
+Rule 1
+Do NOT generate Selenium code directly unless explicitly requested.
+Avoid:
+WebDriver calls
+WebElement usage
+@FindBy
+Direct XPath usage
+Rule 2
+Always reuse existing framework capabilities.
+Before generating code:
+Read framework-capabilities.md
+Read automation-reuse-catalog.md
+Search for reusable APIs first.
+Rule 3
+Do not create duplicate business APIs.
+Bad:
+searchEmployeeById() performEmployeeSearch() employeeSearch()
+Good:
+Reuse existing searchEmployee()
+Rule 4
+Generate business-level automation.
+Preferred:
+When user searches employee by employee id
+Avoid:
+When user clicks Search Button When user enters Employee ID
+BDD should describe business behavior, not UI actions.
+Rule 5
+All UI interactions must go through framework APIs.
+Bad:
+driver.findElement(...) click()
+Good:
+employeeSearchApi.searchEmployee()
+Rule 6
+All locators must be stored in locator.yaml.
+Never hardcode:
+XPath
+CSS Selectors
+IDs
+inside Java classes.
+Rule 7
+When a new UI element is required:
+Update locator.yaml
+Use locator strategy priority
+Priority:
+data-testid
+id
+formcontrolname
+name
+aria-label
+text
+xpath
+Rule 8
+Before generating automation, perform a reuse analysis.
+Output:
+Reuse:
+Existing APIs
+Existing Step Definitions
+Existing Assertions
+Missing:
+New APIs required
+New Locators required
+Generate code only after reuse analysis.
+Rule 9
+Generate the minimum amount of code necessary.
+Preferred:
+Reuse existing APIs.
+Create new APIs only when no existing capability satisfies the requirement.
+Rule 10
+For every manual test case:
+Perform this sequence:
+Analyze manual test case.
+Read framework capabilities.
+Read automation reuse catalog.
+Read UI knowledge base.
+Produce reuse plan.
+Generate automation.
+Update locator.yaml if required.
+Never skip the reuse analysis step.
+Desired Outcome
+Manual Test Case ↓ Reuse Analysis ↓ Existing Business APIs ↓ BDD Automation ↓ Minimal New Code
+Goal:
+Maximum Reuse Minimum Selenium Minimum Locator Maintenance Minimum Framework Duplication
+If you put these two files at the root of the automation repository and force every Devin task to start by reading them, you'll get far more consistent automation generation than relying on ad-hoc prompts every time.
