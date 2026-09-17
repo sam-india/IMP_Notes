@@ -1,0 +1,693 @@
+Yes. The ask is clear now: the PPT is a reference/design artifact only. Devin should analyze it, infer the layout and data requirements, and generate standalone Java code that creates the PPT from API-provided data without requiring the original PPT at runtime.
+
+I would give Devin the following prompt as the initial task:
+
+Task: Analyze Reference PPT and Generate Standalone Java PPT Generator
+
+Objective
+
+I have attached/provided a PowerPoint (".pptx") that should be treated only as a reference/design specification.
+
+Your task is to:
+
+1. Analyze the entire PPT, slide by slide.
+2. Understand its visual structure, layout, content, data requirements, and visualization types.
+3. Identify which content is static and which content represents dynamic/business data.
+4. Infer meaningful semantic keys for the dynamic data.
+5. Generate standalone Java code that can recreate the PPT structure and visual design.
+6. The generated Java code must NOT depend on the original/reference PPTX at runtime.
+7. At runtime, the generated Java code will receive data from existing service APIs and use that data to generate a new ".pptx".
+
+The reference PPT is therefore an input for reverse engineering/code generation, not a runtime template.
+
+---
+
+1. Analyze the PPT
+
+Inspect every slide and identify:
+
+Slide-level information
+
+- Slide number
+- Slide dimensions
+- Background
+- Theme
+- Master/layout information where relevant
+- Overall layout/grid
+- Margins
+- Major sections
+- Relative positioning of elements
+
+Element-level information
+
+Identify all relevant objects, including:
+
+- Titles
+- Headings
+- Subheadings
+- Text boxes
+- Labels
+- KPI/value blocks
+- Shapes
+- Rounded rectangles
+- Lines
+- Tables
+- Images
+- Icons
+- Pie charts
+- Donut charts
+- Bar charts
+- Column charts
+- Line charts
+- Area charts
+- Other graph/chart types
+- Groups of objects
+- Nested/grouped elements
+
+For each element, determine as accurately as possible:
+
+- Element type
+- Semantic purpose
+- Position
+- X/Y coordinates
+- Width
+- Height
+- Alignment
+- Font family
+- Font size
+- Font weight
+- Font color
+- Background/fill
+- Border
+- Border thickness
+- Corner radius where applicable
+- Internal padding
+- Text alignment
+- Vertical alignment
+- Rotation
+- Layer/z-order
+- Relationship to surrounding elements
+
+Do not simply describe the PPT in natural language. Extract a structured representation.
+
+---
+
+2. Identify Static vs Dynamic Content
+
+For every textual/data element, classify it as:
+
+STATIC
+
+Examples:
+
+- "Business Overview"
+- "Revenue"
+- "Profit"
+- "Customer Distribution"
+- Section headings
+- Fixed labels
+
+DYNAMIC
+
+Examples:
+
+- Revenue value
+- Profit value
+- Customer count
+- Percentage
+- Date
+- Customer name
+- Region
+- Table rows
+- Chart values
+- Graph series
+
+For dynamic elements, infer a meaningful semantic key.
+
+For example:
+
+"Total Revenue" → revenue
+"Net Profit" → netProfit
+"Number of Customers" → customerCount
+"Revenue by Region" → revenueByRegion
+"Monthly Revenue Trend" → monthlyRevenue
+
+Do NOT use meaningless keys such as:
+
+textBox17
+shape42
+object183
+
+unless there is no reasonable semantic interpretation.
+
+---
+
+3. Analyze Charts and Graphs
+
+For every chart:
+
+- Determine chart type.
+- Determine title.
+- Determine axis labels.
+- Determine legend.
+- Determine number of series.
+- Determine category structure.
+- Determine whether the chart represents:
+  - time series
+  - categorical comparison
+  - percentage distribution
+  - ranking
+  - other relationship
+- Determine chart position and dimensions.
+- Determine formatting.
+- Determine labels/data-label behavior.
+- Determine legend position.
+- Determine approximate colors/styles if they are part of the design.
+
+Infer the required runtime data structure.
+
+For example:
+
+class RevenuePoint {
+    private String period;
+    private BigDecimal revenue;
+}
+
+or:
+
+class DistributionPoint {
+    private String category;
+    private BigDecimal value;
+}
+
+Do not hardcode the reference PPT's actual business values into the generated application.
+
+The values in the reference PPT are examples used to understand the structure.
+
+---
+
+4. Analyze Tables
+
+For every table:
+
+- Number of columns
+- Number of rows
+- Header structure
+- Column widths
+- Row heights
+- Header formatting
+- Cell formatting
+- Alignment
+- Borders
+- Number formats
+- Dynamic vs static cells
+- Whether the number of rows is fixed or variable
+
+Generate appropriate Java data structures.
+
+For example:
+
+class CustomerRow {
+    private String customer;
+    private BigDecimal revenue;
+    private BigDecimal profit;
+}
+
+The generated PPT should support runtime data supplied by the application.
+
+---
+
+5. Create an Intermediate Representation
+
+Before generating the final Java code, create a structured intermediate representation of the PPT.
+
+For example:
+
+{
+  "presentation": {
+    "width": 13.333,
+    "height": 7.5,
+    "slides": [
+      {
+        "slideNumber": 1,
+        "elements": [
+          {
+            "type": "heading",
+            "key": "businessOverview",
+            "x": 0.5,
+            "y": 0.3,
+            "width": 12.3,
+            "height": 0.5
+          },
+          {
+            "type": "kpi",
+            "key": "revenue",
+            "x": 0.5,
+            "y": 1.2,
+            "width": 3.5,
+            "height": 1.0
+          },
+          {
+            "type": "pieChart",
+            "key": "revenueByRegion",
+            "x": 7.0,
+            "y": 2.7,
+            "width": 5.0,
+            "height": 3.0
+          }
+        ]
+      }
+    ]
+  }
+}
+
+The exact schema can be improved based on what you discover.
+
+The intermediate representation is important because it separates:
+
+PPT analysis
+
+from:
+
+Java code generation
+
+Do not skip this step.
+
+---
+
+6. Generate Standalone Java Code
+
+Generate production-quality Java code that recreates the presentation based on the analyzed structure.
+
+The generated code must:
+
+- Create a new PPTX from scratch.
+- NOT load the reference PPTX.
+- NOT copy slides from the reference PPTX.
+- NOT depend on the reference PPTX existing.
+- NOT use the reference PPT as a runtime template.
+- Receive business data through Java objects/DTOs.
+- Render the data into the appropriate locations.
+- Reproduce the visual structure as closely as possible.
+
+Use the appropriate Java PPT generation library.
+
+If the project already has a PPT library dependency, use that.
+
+Otherwise evaluate Apache POI and other suitable Java libraries and select the one that provides the required capabilities.
+
+Document the choice and its limitations.
+
+---
+
+7. Separate Data From Presentation
+
+Do not hardcode business data inside rendering methods.
+
+Use a structure similar to:
+
+public class ReportData {
+
+    private String reportTitle;
+
+    private BigDecimal revenue;
+
+    private BigDecimal profit;
+
+    private Long customerCount;
+
+    private List<RevenuePoint> revenueTrend;
+
+    private List<DistributionPoint> revenueByRegion;
+
+    private List<CustomerRow> customers;
+}
+
+Then have a dedicated generator:
+
+public class ReportPptGenerator {
+
+    public byte[] generate(ReportData data) {
+        // Create PPT
+        // Render slides
+        // Render data
+        // Return PPTX
+    }
+}
+
+The actual API integration does not need to be implemented unless required.
+
+Create clean interfaces so the existing service can populate "ReportData" from its APIs.
+
+---
+
+8. Build Reusable Rendering Components
+
+Do not put everything into one giant method.
+
+Create reusable components/services such as:
+
+PresentationGenerator
+SlideRenderer
+TextRenderer
+ShapeRenderer
+TableRenderer
+ChartRenderer
+PieChartRenderer
+BarChartRenderer
+LineChartRenderer
+LayoutManager
+TextFitManager
+
+Use appropriate abstractions.
+
+For example:
+
+textRenderer.render(
+    slide,
+    data.getRevenue(),
+    revenueLayout
+);
+
+and:
+
+chartRenderer.renderPieChart(
+    slide,
+    data.getRevenueByRegion(),
+    revenueByRegionLayout
+);
+
+The goal is to create a reusable rendering framework rather than one-off procedural code.
+
+---
+
+9. Text Overflow / Boundary Handling
+
+This is a critical requirement.
+
+Dynamic API data can be significantly longer than the example data in the reference PPT.
+
+The generated code must ensure that dynamic content does not unintentionally overflow its designated textbox/shape.
+
+Implement a reusable text-fitting strategy.
+
+For every dynamic text area:
+
+1. Determine available width and height.
+2. Determine font properties.
+3. Determine whether the supplied text fits.
+4. If it does not fit, apply an appropriate strategy.
+
+Possible strategies:
+
+WRAP
+SHRINK_FONT
+TRUNCATE
+EXPAND
+FAIL
+
+Make this configurable per field.
+
+Example:
+
+TextFitPolicy.SHRINK_FONT
+
+with:
+
+minFontSize = 10
+
+For content where truncation is unacceptable, use an error/reporting strategy.
+
+The generated code must never silently produce a visibly broken slide.
+
+---
+
+10. Chart Boundary Handling
+
+Charts must also remain within their designated areas.
+
+Ensure:
+
+- Chart width/height is controlled.
+- Titles do not overlap the chart.
+- Legends do not escape the chart area.
+- Data labels do not unnecessarily overlap.
+- Axis labels remain readable.
+- Long category names are handled.
+- Large/small values do not break formatting.
+- Variable numbers of data points are supported where appropriate.
+
+Do not assume that the number or length of API values will always match the reference PPT.
+
+---
+
+11. Variable Runtime Data
+
+The reference PPT may contain only a small sample of data.
+
+The generated code must support realistic runtime variation.
+
+For example:
+
+Reference:
+
+3 regions
+
+Runtime:
+
+10 regions
+
+The code should handle this gracefully.
+
+Similarly:
+
+Reference: 5 table rows
+Runtime: 25 table rows
+
+Implement appropriate behavior such as:
+
+- additional rows
+- pagination/new slides where appropriate
+- controlled font reduction
+- wrapping
+- truncation
+- layout adjustment
+
+Do not blindly assume that the reference PPT's dimensions will always be sufficient.
+
+---
+
+12. Preserve Visual Design
+
+The generated PPT should reproduce the reference presentation's visual language, including where practical:
+
+- Typography
+- Font sizes
+- Font weights
+- Spacing
+- Alignment
+- Shapes
+- Borders
+- Backgrounds
+- Section hierarchy
+- Chart placement
+- Chart styling
+- Colors
+- Table styling
+- Relative proportions
+- White space
+
+The objective is not merely to generate a PPT containing the same information.
+
+The objective is to generate a PPT that visually resembles the reference PPT while being generated independently from runtime data.
+
+---
+
+13. Do Not Make Unsupported Assumptions
+
+If something cannot be reliably extracted from the PPT:
+
+1. Document it.
+2. Make the smallest reasonable assumption.
+3. Keep that assumption configurable.
+4. Do not silently invent business semantics.
+
+For example:
+
+Detected text: "Performance"
+Possible semantic meanings:
+- performancePercentage
+- performanceStatus
+
+If semantic meaning cannot be determined reliably, expose it as a configurable mapping rather than pretending it is known.
+
+---
+
+14. Testing
+
+Create tests for:
+
+Basic generation
+
+Reference PPT
+       ↓
+Generated Java code
+       ↓
+Generated PPT
+
+Verify that the PPT opens successfully.
+
+Data variation
+
+Test:
+
+- short text
+- very long text
+- empty values
+- null values
+- large numbers
+- small numbers
+- large chart datasets
+- small chart datasets
+- long category names
+- variable table row counts
+
+Layout validation
+
+Verify:
+
+- no text unintentionally leaves its designated area
+- no chart leaves its designated area
+- no overlapping elements
+- no clipped critical content
+- PPT remains valid/openable
+
+---
+
+15. Visual Validation
+
+If possible, implement or document a way to render generated slides to images/PDF and compare them against the reference PPT.
+
+The comparison should focus on:
+
+- element positions
+- dimensions
+- typography
+- spacing
+- colors
+- chart placement
+- overall composition
+
+A generated PPT that technically opens but looks significantly different from the reference is not considered a successful implementation.
+
+---
+
+16. Deliverables
+
+Produce:
+
+A. PPT analysis
+
+A structured report describing:
+
+- each slide
+- each element
+- semantic interpretation
+- dynamic data requirements
+- chart structures
+- layout measurements
+
+B. Intermediate representation
+
+Provide the JSON/YAML model representing the analyzed presentation.
+
+C. Java implementation
+
+Provide:
+
+- data DTOs
+- rendering framework
+- slide generation code
+- text rendering
+- shape rendering
+- table rendering
+- chart rendering
+- layout handling
+- text overflow handling
+- validation
+- error handling
+
+D. Example
+
+Create sample "ReportData" containing realistic dummy values and demonstrate generation of:
+
+sample-output.pptx
+
+E. Documentation
+
+Explain:
+
+1. How the PPT was analyzed.
+2. What semantic keys were identified.
+3. How API data should map to those keys.
+4. How to add a new data field.
+5. How to add a new chart.
+6. How text overflow is handled.
+7. How chart overflow is handled.
+8. How to regenerate the presentation.
+9. Which assumptions were made.
+10. Which parts of the reference PPT could not be reproduced exactly.
+
+---
+
+Most Important Constraint
+
+The reference PPT must NOT be required when generating the final presentation.
+
+The final architecture must be:
+
+                REFERENCE PHASE
+
+Reference PPT
+     ↓
+PPT Analyzer
+     ↓
+Intermediate Representation
+     ↓
+Semantic Analysis
+     ↓
+Java Code Generation
+     ↓
+Generated Java PPT Generator
+
+Then:
+
+                RUNTIME PHASE
+
+Existing Service APIs
+        ↓
+     ReportData
+        ↓
+Generated Java PPT Generator
+        ↓
+     New PPTX
+
+There must be zero runtime dependency on the original reference PPTX.
+
+Start by inspecting the provided PPT thoroughly. Do not immediately start writing the final Java implementation. First produce the structural/semantic analysis and intermediate representation, then use that representation to generate the implementation.One thing I'd do differently from the prompt above
+
+Don't let Devin immediately modify your existing service. Give it the PPT and ask it to work in a separate module/project first.
+
+Your first milestone should be:
+
+PPT
+ ↓
+Analysis JSON
+ ↓
+Generated Java
+ ↓
+PPT
+
+Once that works reasonably well, integrate the generated renderer with your real APIs.
+
+That will make it much easier to determine whether the PPT-understanding/code-generation concept actually works before you introduce your production service into the equation.
