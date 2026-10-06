@@ -15,3 +15,95 @@ From a leadership perspective, I work closely with developers, architects, busin
 My role is also increasingly expanding into AI-assisted engineering and Generative AI. I actively use AI-assisted development tools and prompt engineering to improve developer productivity, accelerate code generation and refactoring, support test creation, and improve technical documentation. Beyond using AI as a developer productivity tool, I have been exploring the integration of GenAI capabilities into enterprise applications, including LLM-based services, model abstraction, enterprise integration, and agentic AI concepts.
 
 Overall, my current role sits at the intersection of architecture, software engineering, distributed systems, technical leadership, and emerging AI technologies. I am responsible for defining how complex enterprise requirements should be transformed into reliable and scalable technology solutions, while also providing the technical leadership required to take those solutions from architecture and design through implementation and production. My focus is on building systems that are scalable, resilient, maintainable, observable, and aligned with long-term business and technology objectives.
+SAJAL SAMAIYA
+ sajalsm3@gmail.com | +91-9977817883 | Pune, India | sajalsamaiya1
+Solution Architect | Full Stack Lead | Distributed Systems
+PROFESSIONAL SUMMARY
+• Solution Architect and Full Stack Lead with 11+ years of experience designing and 
+delivering scalable, distributed enterprise systems across banking, risk, fraud, and 
+insurance domains.
+• Strong expertise in Java-based backend platforms, microservices architecture, 
+event-driven systems, and modern web UI frameworks, with hands-on leadership 
+across the full software development lifecycle.
+• Proven ability to translate complex business requirements into robust backend 
+architectures and reliable full stack solutions, while owning production stability, 
+scalability, and performance.
+• Experienced in leading and mentoring high-performing engineering teams, 
+collaborating closely with business and product stakeholders to deliver measurable 
+outcomes.
+• Actively leveraging AI-assisted developer tools and prompt engineering to improve 
+engineering efficiency and code quality.
+CORE SKILLS
+• Domains: Banking, Risk & Controls, Fraud, Insurance, Wealth Management
+• Backend: Java, Spring Boot, Microservices, Distributed Systems, REST APIs, Event-
+Driven Architecture, Kafka, IBM MQ, Redis
+• Frontend: Angular, TypeScript, HTML
+• Cloud/DevOps: AWS, Azure, Kubernetes, OpenShift, Docker, Helm, Jenkins, Bitbucket, 
+CI/CD
+• Data Platforms: Hadoop, PySpark, Sqoop, Data Ingestion Frameworks, Batch & 
+Streaming Pipelines
+• Databases: Oracle, MySQL, DB2
+• Architecture & Design: System Design, HLD, LLD, C4 Model, API Design, Scalability, 
+Fault Tolerance, Security, Resilience
+• AI-Assisted Engineering & Productivity: Prompt Engineering, GitHub Copilot, Codex-
+based coding assistants, AI-assisted code generation, refactoring, test creation, and 
+documentation
+• Quality, Security & Observability: Sonar, Junit, Fortify, CVM, Splunk, AppDynamics
+• Practices: Agile, SDLC, Clean Code, SOLID Principles, Design Patterns
+PROFESSIONAL EXPERIENCE
+Citicorp Services India Pvt. Ltd. | June 2020 – Present
+Solution Architect / Full Stack Technical Lead
+Project: CRC – Citi Risk & Control • Led end-to-end architecture and design of distributed Java Spring Boot microservices 
+supporting enterprise-scale risk and control platforms.
+• Designed scalable and fault-tolerant backend systems using REST APIs and Kafka / 
+MQ-based asynchronous communication.
+• Authored and governed HLD, LLD, and C4 architecture artifacts to ensure alignment 
+across technical and business stakeholders.
+• Defined service boundaries, API contracts, and integration patterns across complex 
+multi-system enterprise ecosystems.
+• Architected reusable data ingestion frameworks and analytics pipelines enabling 
+enterprise reporting and data-quality validation.
+• Designed and delivered the “Third Eye” data anomaly and quality validation system 
+using rule-based logic to detect inconsistencies and abnormal patterns across 
+distributed datasets.
+• Applied rule-based and predictive logic to strengthen early risk detection and data 
+validation capabilities.
+• Acted as technical owner for multiple services, driving clean coding, SOLID 
+principles, and architectural best practices through reviews.
+• Led cloud-native deployments and production readiness, ensuring platform stability, 
+observability, and performance.
+Infosys Ltd.
+Senior Software Engineer (Full Stack) | Dec 2018 – Mar 2020
+• Developed Spring-based backend services using Spring MVC, JPA, and REST/SOAP 
+APIs.
+• Built Angular-based frontend modules for customer onboarding and transaction 
+tracking.
+• Implemented real-time notification and reporting modules.
+• Participated in sprint planning, design discussions, and production deployments.
+Accenture Solutions
+Software Engineer | Dec 2016 – Nov 2018
+• Designed and developed enterprise insurance applications using Java and Spring.
+• Delivered end-to-end features across backend services and UI layers.
+• Optimized performance-critical components and batch processing jobs.
+• Supported production deployments and release cycles.
+Wipro Ltd.
+Software Engineer | Sep 2014 – Nov 2016
+• Developed BPM workflows and backend Java services for enterprise process 
+automation.
+• Built integration utilities for inter-application communication.
+• Automated workflows and reporting dashboards.
+• Gathered business requirements and translated them into technical solutions. CMC Ltd
+Software Engineer | Jul 2013 – Jul 2014
+• Worked on Java-based application development as part of an enterprise delivery 
+team.
+• Contributed to component-level design, coding, and enhancement of application 
+features.
+• Participated in debugging, defect fixing, and QA support during release cycles.
+• Built strong fundamentals in object-oriented programming and SDLC.
+EDUCATION
+Bachelor of Engineering (B.E.) – RGPV (2009–2013)
+PAPERS, CERTIFICATIONS & INNOVATION
+• Presented an Agentic AI solution design at the CTII Ignite Challenge, focused on 
+governed, agent-based enterprise automation.
+• Oracle Certified Java Associate (OCJA)
+• Confluent Data Streaming Engineer
